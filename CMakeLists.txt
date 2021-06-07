@@ -6,14 +6,12 @@
 #  buildtool [-I /install/path] -bt[i] -jN
 # ======================================================================
 
-cmake_minimum_required (VERSION 3.12...3.18 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.19 FATAL_ERROR)
 
-project(lardataalg LANGUAGES CXX)
+project(lardataalg 09.04.04 LANGUAGES CXX)
 
-# cetbuildtools contains our cmake modules
-find_package(cetbuildtools REQUIRED)
-
-list(APPEND CMAKE_MODULE_PATH $ENV{CANVAS_ROOT_IO_DIR}/Modules)
+find_package(cetmodules REQUIRED)
+find_package(canvas_root_io)
 
 include(CetCMakeEnv)
 cet_cmake_env()
@@ -45,8 +43,5 @@ add_subdirectory(lardataalg)
 # tests
 add_subdirectory(test)
 
-# ups - table and config files
-add_subdirectory(ups)
+add_subdirectory(cmakeConfig)
 
-# packaging utility
-include(UseCPack)

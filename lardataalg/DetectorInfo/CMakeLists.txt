@@ -3,9 +3,8 @@ cet_make(LIBRARIES larcorealg_Geometry
                    ${MF_MESSAGELOGGER}
                    cetlib_except
                    ${FHICLCPP}
-                   ${ROOT_CORE}
-                   ${ROOT_HIST})
+                   ROOT::Core
+                   ROOT::Hist)
 
 install_headers()
 install_fhicl()
-install_source()
