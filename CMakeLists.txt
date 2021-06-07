@@ -8,7 +8,7 @@
 
 cmake_minimum_required (VERSION 3.19 FATAL_ERROR)
 
-project(lardataalg 09.04.04 LANGUAGES CXX)
+project(lardataalg VERSION 09.04.04 LANGUAGES CXX)
 
 find_package(cetmodules REQUIRED)
 find_package(canvas_root_io)
