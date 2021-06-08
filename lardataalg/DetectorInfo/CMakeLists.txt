@@ -1,8 +1,8 @@
 cet_make(LIBRARIES larcorealg_Geometry
                    larcorealg_CoreUtils
-                   ${MF_MESSAGELOGGER}
+                   messagefacility::MFMessageLogger
                    cetlib_except
-                   ${FHICLCPP}
+                   fhiclcpp::fhiclcpp fhiclcpp::types
                    ROOT::Core
                    ROOT::Hist)
 
