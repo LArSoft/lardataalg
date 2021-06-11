@@ -31,6 +31,7 @@ find_ups_product( larcorealg )
 find_ups_product( lardataobj )
 find_ups_product( nusimdata )
 find_ups_root()
+find_package(messagefacility)
 
 # macros for artdaq_dictionary and simple_plugin
 include(ArtDictionary)
