@@ -1,3 +1,4 @@
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-compare -Wno-pedantic")
 cet_test( LArPropertiesStandard_test
   LIBRARIES
   lardataalg_DetectorInfo
@@ -87,5 +88,20 @@ cet_test( DetectorPropertiesLArTPCdetector_test
 ##  TEST_ARGS ./dettest_bo.fcl
 ##)
 
-install_source()
+# set FHICL_FILE_PATH and FW_SEARCH_PATH for the case where building without mrb
+# this is not generic, we take advantage of knowing the subdirectories for the fcl and gdml files
+set( mrb_build_dir $ENV{MRB_BUILDDIR} )
+if( NOT mrb_build_dir )
+  #message(STATUS "MRB_BUILDDIR is undefined, set FHICL_FILE_PATH and FW_SEARCH_PATH")
+  set_tests_properties( LArPropertiesStandard_test
+                        LArPropertiesLArTPCdetector_test
+                        LArPropertiesBo_test
+                        DetectorClocksStandard_test
+                        DetectorClocksLArTPCdetector_test
+                        DetectorClocksBo_test
+                        DetectorClocksCSU40L_test
+                        DetectorPropertiesLArTPCdetector_test
+                        PROPERTIES ENVIRONMENT
+                        "FHICL_FILE_PATH=.:${CMAKE_BINARY_DIR}/job:${larcorealg_fcl_dir};FW_SEARCH_PATH=${CMAKE_BINARY_DIR}/gdml:${larcorealg_gdml_dir}" )
+endif()
 install_fhicl()
