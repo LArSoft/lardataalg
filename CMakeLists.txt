@@ -42,7 +42,7 @@ include(BasicPlugin)
 add_subdirectory(lardataalg)
 
 # tests
-#add_subdirectory(test)
+add_subdirectory(test)
 
 add_subdirectory(cmakeConfig)
 
