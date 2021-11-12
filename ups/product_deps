@@ -7,8 +7,8 @@ fcldir product_dir job
 
 #
 product         version
-larcorealg	v09_03_01
-lardataobj	v09_03_04
+larcorealg	v09_03_01_01
+lardataobj	v09_03_04_01
 cetbuildtools	v8_18_05	-	only_for_build
 end_product_list
 
