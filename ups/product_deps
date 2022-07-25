@@ -248,7 +248,7 @@ fcldir	product_dir	job
 ####################################
 product		version		qual	flags		<table_format=2>
 larcorealg	v09_06_05	-
-lardataobj	v09_09_00	-
+lardataobj	v09_09_00_01	-
 cetmodules	v3_13_02	-	only_for_build
 end_product_list
 ####################################
