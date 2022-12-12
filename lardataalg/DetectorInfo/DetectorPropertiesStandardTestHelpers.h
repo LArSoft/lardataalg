@@ -93,6 +93,7 @@ namespace testing {
       return std::make_unique<detinfo::DetectorPropertiesStandard>(
         pset,
         providers.get<geo::GeometryCore>(),
+        providers.get<geo::WireReadoutGeom>(),
         providers.get<detinfo::LArProperties>(),
         ignore_keys);
     } // setup()

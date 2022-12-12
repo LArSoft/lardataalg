@@ -7,13 +7,19 @@
 
 // LArSoft libraries
 #include "larcorealg/CoreUtils/RealComparisons.h"
-#include "larcorealg/Geometry/ChannelMapStandardAlg.h"
+#include "larcorealg/Geometry/GeoObjectSorterStandard.h"
 #include "larcorealg/Geometry/GeometryCore.h"
+#include "larcorealg/Geometry/GeometryDataContainers.h"
+#include "larcorealg/Geometry/StandaloneGeometrySetup.h"
+#include "larcorealg/Geometry/WireReadoutGeom.h"
 #include "larcorealg/TestUtils/geometry_unit_test_base.h"
 #include "lardataalg/DetectorInfo/DetectorClocksStandardTestHelpers.h"
 #include "lardataalg/DetectorInfo/DetectorPropertiesStandard.h"
 #include "lardataalg/DetectorInfo/DetectorPropertiesStandardTestHelpers.h"
 #include "lardataalg/DetectorInfo/LArPropertiesStandardTestHelpers.h"
+
+// art libraries
+#include "fhiclcpp/ParameterSet.h"
 
 // C/C++ standard libraries
 #include <array>
@@ -24,14 +30,14 @@
 //---
 
 /*
- * GeometryTesterEnvironment, configured with a geometry-aware configuration
- * object, is used in a non-Boost-unit-test context.
+ * GeometryTesterEnvironment, configured with a geometry-aware configuration object, is
+ * used in a non-Boost-unit-test context.
  * It provides:
  * - all the other services configured as dependencies
  */
-using TesterConfiguration =
-  testing::BasicGeometryEnvironmentConfiguration<geo::ChannelMapStandardAlg>;
-using TestEnvironment = testing::GeometryTesterEnvironment<TesterConfiguration>;
+using TesterConfiguration = testing::BasicGeometryEnvironmentConfiguration;
+using TestEnvironment =
+  testing::GeometryTesterEnvironment<TesterConfiguration, geo::GeoObjectSorterStandard>;
 
 //------------------------------------------------------------------------------
 //---  The tests
@@ -47,8 +53,7 @@ using TestEnvironment = testing::GeometryTesterEnvironment<TesterConfiguration>;
  * The arguments in argv are:
  * 0. name of the executable ("DetectorPropertiesStandard_test")
  * 1. (mandatory) path to the FHiCL configuration file
- * 2. FHiCL path to the configuration of the test
- *    (default: physics.analyzers.larptest)
+ * 2. FHiCL path to the configuration of the test (default: physics.analyzers.larptest)
  * 3. FHiCL path to the configuration of DetectorProperties service
  *    (default: services.DetectorPropertiesService)
  *
@@ -72,12 +77,12 @@ int main(int argc, char const** argv)
     return 1;
   }
 
-  // second argument: path of the parameter set for geometry test configuration
-  // (optional; default does not have any tester)
+  // second argument: path of the parameter set for geometry test configuration (optional;
+  // default does not have any tester)
   if (++iParam < argc) config.SetMainTesterParameterSetPath(argv[iParam]);
 
-  // third argument: path of the parameter set for DetectorProperties confi
-  // (optional; default: "services.DetectorProperties" from inherited object)
+  // third argument: path of the parameter set for DetectorProperties confi (optional;
+  // default: "services.DetectorProperties" from inherited object)
   if (++iParam < argc) {
     config.SetServiceParameterSetPath("DetectorPropertiesService", argv[iParam]);
   }
@@ -88,11 +93,12 @@ int main(int argc, char const** argv)
   // testing environment setup
   //
   TestEnvironment TestEnv(config);
+  TestEnv.AcquireProvider(lar::standalone::SetupReadout({}, TestEnv.Geometry()));
 
-  // DetectorPropertiesStandard and all its dependencies support the simple set
-  // up (see testing::TesterEnvironment::SimpleProviderSetup()), except for
-  // Geometry, that has been configured already in the geometry-aware
-  // environment. So we invoke a simple set up for each of the dependencies:
+  // DetectorPropertiesStandard and all its dependencies support the simple set up (see
+  // testing::TesterEnvironment::SimpleProviderSetup()), except for Geometry, that has
+  // been configured already in the geometry-aware environment. So we invoke a simple set
+  // up for each of the dependencies:
   TestEnv.SimpleProviderSetup<detinfo::LArPropertiesStandard>();
   TestEnv.SimpleProviderSetup<detinfo::DetectorClocksStandard>();
   TestEnv.SimpleProviderSetup<detinfo::DetectorPropertiesStandard>();
@@ -102,14 +108,8 @@ int main(int argc, char const** argv)
   // (I leave it here for reference -- there is no test algorithm here)
   //
 
-  // 1. we initialize it from the configuration in the environment,
-  //  MyTestAlgo Tester(TestEnv.TesterParameters());
-
-  // 2. we set it up with the geometry from the environment
-  //  Tester.Setup(*(TestEnv.Provider<detinfo::DetectorProperties>()));
-
-  // 3. then we run it!
   auto const& geom = *TestEnv.Provider<geo::GeometryCore>();
+  auto const& wireReadoutGeom = *TestEnv.Provider<geo::WireReadoutGeom>();
   auto const clock_data = TestEnv.Provider<detinfo::DetectorClocks>()->DataForJob();
   auto const& detp = *TestEnv.Provider<detinfo::DetectorProperties>();
 
@@ -134,7 +134,7 @@ int main(int argc, char const** argv)
 
   // accumulate the plane IDs; needed just for table formatting
   unsigned int headerColWidth = 0U;
-  for (auto planeID : geom.Iterate<geo::PlaneID>()) {
+  for (auto planeID : wireReadoutGeom.Iterate<geo::PlaneID>()) {
     auto const l = std::string(planeID).length();
     if (headerColWidth < l) headerColWidth = l;
   }
@@ -143,10 +143,10 @@ int main(int argc, char const** argv)
   // collect all drift distances, and check whether they are all equal
   bool allSameDrift = true;
   lar::util::RealComparisons<double> check(1.0); // 1 cm tolerance
-  auto driftDistances = geom.makeTPCData<double>();
-  for (auto const& TPC : geom.Iterate<geo::TPCGeo>()) {
-    auto const driftDistance = TPC.DriftDistance();
-    driftDistances[TPC.ID()] = driftDistance;
+  geo::TPCDataContainer<double> driftDistances{geom.Ncryostats(), geom.MaxTPCs()};
+  for (auto const& tpc : geom.Iterate<geo::TPCGeo>()) {
+    auto const driftDistance = tpc.DriftDistance();
+    driftDistances[tpc.ID()] = driftDistance;
     allSameDrift = allSameDrift & check.equal(driftDistance, driftDistances.first());
   } // for
 
