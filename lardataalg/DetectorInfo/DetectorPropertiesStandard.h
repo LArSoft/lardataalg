@@ -14,6 +14,7 @@
 // LArSoft libraries
 #include "larcorealg/CoreUtils/ProviderPack.h"
 #include "larcorealg/Geometry/GeometryCore.h"
+#include "larcorealg/Geometry/WireReadoutGeom.h"
 #include "larcoreobj/SimpleTypesAndConstants/PhysicalConstants.h"
 #include "lardataalg/DetectorInfo/DetectorClocks.h"
 #include "lardataalg/DetectorInfo/DetectorProperties.h"
@@ -21,7 +22,6 @@
 #include "lardataalg/DetectorInfo/LArProperties.h"
 
 // framework libraries
-#include "fhiclcpp/ParameterSet.h"
 #include "fhiclcpp/fwd.h"
 #include "fhiclcpp/types/Atom.h"
 #include "fhiclcpp/types/OptionalAtom.h"
@@ -36,7 +36,8 @@ namespace detinfo {
   class DetectorPropertiesStandard final : public DetectorProperties {
   public:
     /// List of service providers we depend on
-    using providers_type = lar::ProviderPack<geo::GeometryCore, detinfo::LArProperties>;
+    using providers_type =
+      lar::ProviderPack<geo::GeometryCore, geo::WireReadoutGeom, detinfo::LArProperties>;
 
     /// Structure for configuration parameters
     struct Configuration_t {
@@ -141,8 +142,9 @@ namespace detinfo {
     }; // Configuration_t
 
     DetectorPropertiesStandard(fhicl::ParameterSet const& pset,
-                               const geo::GeometryCore* geo,
-                               const detinfo::LArProperties* lp,
+                               geo::GeometryCore const* geo,
+                               geo::WireReadoutGeom const* wireReadoutGeom,
+                               detinfo::LArProperties const* lp,
                                std::set<std::string> const& ignore_params = {});
 
     DetectorPropertiesStandard(DetectorPropertiesStandard const&) = delete;
@@ -234,8 +236,6 @@ namespace detinfo {
     void ValidateAndConfigure(fhicl::ParameterSet const& p,
                               std::set<std::string> const& ignore_params);
 
-    std::string CheckTimeOffsets(std::set<geo::View_t> const& requested_views) const;
-
     /// Parameters for Sternheimer density effect corrections
     struct SternheimerParameters_t {
       double a;    ///< parameter a
@@ -247,8 +247,9 @@ namespace detinfo {
 
     // service providers we depend on;
     // in principle could be replaced by a single providerpack_type.
-    const detinfo::LArProperties* fLP;
-    const geo::GeometryCore* fGeo;
+    detinfo::LArProperties const* fLP;
+    geo::GeometryCore const* fGeo;
+    geo::WireReadoutGeom const* fChannelMap;
 
     std::vector<double> fEfield;     ///< kV/cm (per inter-plane volume) !
     double fElectronlifetime;        ///< microseconds

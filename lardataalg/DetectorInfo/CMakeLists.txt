@@ -17,6 +17,7 @@ cet_make_library(SOURCE
   cetlib_except::cetlib_except
   PRIVATE
   cetlib::cetlib
+  range-v3::range-v3
   ROOT::Core
   ROOT::Hist
 )
