@@ -8,7 +8,7 @@
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-find_package(cetmodules REQUIRED)
+find_package(cetmodules 3.24.00 REQUIRED)
 project(lardataalg VERSION 09.17.03 LANGUAGES CXX)
 
 include(CetCMakeEnv)
@@ -30,7 +30,7 @@ find_package(fhiclcpp REQUIRED EXPORT)
 find_package(cetlib REQUIRED EXPORT)
 find_package(cetlib_except REQUIRED EXPORT)
 
-find_package(Boost COMPONENTS headers REQUIRED EXPORT)
+find_package(Boost REQUIRED EXPORT)
 find_package(ROOT COMPONENTS Core EG Hist Physics REQUIRED EXPORT)
 
 find_package(lardataobj REQUIRED EXPORT)

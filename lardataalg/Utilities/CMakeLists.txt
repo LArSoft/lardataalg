@@ -11,7 +11,7 @@ cet_make_library(LIBRARY_NAME UtilitiesHeaders INTERFACE
   LIBRARIES INTERFACE
   larcorealg::headers
   fhiclcpp::fhiclcpp
-  Boost::headers
+  Boost::boost
 )
 
 install_headers(SUBDIRS quantities)

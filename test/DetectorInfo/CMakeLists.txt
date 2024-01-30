@@ -1,3 +1,9 @@
+cet_transitive_paths(FHICL_DIR BINARY IN_TREE)
+cet_test_env_prepend(FHICL_FILE_PATH "." ${TRANSITIVE_PATHS_WITH_FHICL_DIR})
+
+cet_transitive_paths(GDML_DIR BINARY IN_TREE)
+cet_test_env_prepend(FW_SEARCH_PATH ${TRANSITIVE_PATHS_WITH_GDML_DIR})
+
 cet_test(LArPropertiesStandard_test
   DATAFILES lartest_standard.fcl
   TEST_ARGS ./lartest_standard.fcl
