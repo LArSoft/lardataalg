@@ -10,6 +10,10 @@
 #define LARDATA_DETINFO_DETECTORPROPERTIES_H
 
 #include "lardataalg/DetectorInfo/DetectorPropertiesData.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
+
+// Forward declarations
+class geo::TPCID;
 
 /// General LArSoft Utilities
 namespace detinfo {
@@ -41,9 +45,16 @@ namespace detinfo {
      * "readout plane 0" and "readout plane 1", but effectively correspond to
      * planegap 1 and 2.
      *
-     * Note that all TPCs are assumed to have the same electric field values.
+     * Note that all TPCs are assumed to have the same electric field strength.
      */
     virtual double Efield(unsigned int planegap = 0) const = 0;
+
+    /**
+     * @brief Returns a the direction of the nominal electric field.
+     * @param tpcid geo::TPCID of the desired TPC
+     * @return Unit vector in the direction of the field (from anode to cathode)
+    */
+    virtual geo::Vector_t NomEfieldDir(geo::TPCID const& tpcid) const = 0;
 
     virtual double DriftVelocity(double efield = 0., double temperature = 0.) const = 0;
 

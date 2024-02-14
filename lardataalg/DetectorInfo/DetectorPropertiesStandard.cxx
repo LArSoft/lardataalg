@@ -60,6 +60,19 @@ namespace detinfo {
     fNumberTimeSamples = config().NumberTimeSamples();
     fReadOutWindowSize = config().ReadOutWindowSize();
 
+    // The Efield direction is calculable from the geometry. Do that here
+    //
+    fNomEfieldDir.resize(fGeo->NCryostats());
+    for (auto icryo : fNomEfieldDir) {
+      fNomEfieldDir[icryo].resize(fGeo->NTPC(icryo));
+      for (auto itpc : fNomEfieldDir[icryo]) {
+
+
+      }
+      
+
+    }
+
     std::set<geo::View_t> present_views;
     if (config().TimeOffsetU(fTimeOffsetU)) present_views.insert(geo::kU);
     if (config().TimeOffsetV(fTimeOffsetV)) present_views.insert(geo::kV);
@@ -101,6 +114,14 @@ namespace detinfo {
     return fEfield[planegap];
   }
 
+  //------------------------------------------------------------------------------------//
+  geo::Vector_t DetectorPropertiesStandard::NomEfieldDir(geo::TPCID tpcid) const
+  {
+    // We have the geometry, so just return the calculable value
+    // Efield points opposite of electron drift dir
+    const geo::TPCID& tpcGeo = fGeo->TPC(tpcid);
+    return -tpcGeo.DriftDir();
+  }
   //------------------------------------------------
   double DetectorPropertiesStandard::Density(double temperature) const
   {

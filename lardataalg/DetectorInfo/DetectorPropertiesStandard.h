@@ -30,6 +30,9 @@
 // C/C++ standard libraries
 #include <set>
 
+// Forward declarations
+class geo::TPCID;
+
 /// General LArSoft Utilities
 namespace detinfo {
 
@@ -153,6 +156,13 @@ namespace detinfo {
     // Accessors.
 
     double Efield(unsigned int planegap = 0) const override; ///< kV/cm
+    
+    /**
+     * @brief Returns a the direction of the nominal electric field.
+     * @param tpcid geo::TPCID of the desired TPC
+     * @return Unit vector in the direction of the field (from anode to cathode)
+    */
+    geo::Vector_t NomEfieldDir(geo::TPCID const& tpcid) const override;
 
     double DriftVelocity(double efield = 0.,
                          double temperature = 0.) const override; ///< cm/us

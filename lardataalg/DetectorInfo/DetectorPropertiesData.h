@@ -2,6 +2,7 @@
 #define DETINFO_DETECTORPROPERTIESDATA_H
 
 #include "larcoreobj/SimpleTypesAndConstants/geo_types.h"
+#include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 
 #include <vector>
 
@@ -16,6 +17,7 @@ namespace detinfo {
                                     std::vector<std::vector<double>>&& drift_direction);
 
     double Efield(unsigned int planegap = 0) const; ///< kV/cm
+    geo::Vector_t NomEfieldDir(geo::TPCID const& tpcid); /// Unit vector 
 
     double DriftVelocity(double efield = 0.,
                          double temperature = 0.) const; ///< cm/us

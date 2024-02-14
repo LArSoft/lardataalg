@@ -18,6 +18,11 @@ double detinfo::DetectorPropertiesData::Efield(unsigned int const planegap) cons
   return fProperties.Efield(planegap);
 }
 
+geo::Vector_t detinfo::DetectorPropertiesData::NomEfieldDir(geo::TPCID const& tpcid) const
+{
+  return fProperties.NomEfieldDir(tpcid);
+}
+
 double detinfo::DetectorPropertiesData::DriftVelocity(double const efield,
                                                       double const temperature) const
 {
