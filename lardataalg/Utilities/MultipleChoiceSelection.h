@@ -15,6 +15,7 @@
 #include <cctype>    // std::tolower()
 #include <cstddef>   // std::size_t
 #include <exception> // std::exception
+#include <limits>
 #include <map>
 #include <optional>
 #include <ostream>
