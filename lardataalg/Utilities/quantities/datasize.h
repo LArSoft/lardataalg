@@ -224,7 +224,10 @@ namespace util::quantities {
     {
       return byte{static_cast<unsigned long long int>(v)};
     }
-    constexpr byte operator""_B(unsigned long long int v) { return byte{v}; }
+    constexpr byte operator""_B(unsigned long long int v)
+    {
+      return byte{v};
+    }
     // @}
 
     // @{
@@ -233,7 +236,10 @@ namespace util::quantities {
     {
       return kibibyte{static_cast<unsigned long long int>(v)};
     }
-    constexpr kibibyte operator""_kiB(unsigned long long int v) { return kibibyte{v}; }
+    constexpr kibibyte operator""_kiB(unsigned long long int v)
+    {
+      return kibibyte{v};
+    }
     // @}
 
     // @{
@@ -242,7 +248,10 @@ namespace util::quantities {
     {
       return mebibyte{static_cast<unsigned long long int>(v)};
     }
-    constexpr mebibyte operator""_MiB(unsigned long long int v) { return mebibyte{v}; }
+    constexpr mebibyte operator""_MiB(unsigned long long int v)
+    {
+      return mebibyte{v};
+    }
     // @}
 
     // @{
@@ -251,7 +260,10 @@ namespace util::quantities {
     {
       return gibibyte{static_cast<unsigned long long int>(v)};
     }
-    constexpr gibibyte operator""_GiB(unsigned long long int v) { return gibibyte{v}; }
+    constexpr gibibyte operator""_GiB(unsigned long long int v)
+    {
+      return gibibyte{v};
+    }
     // @}
 
     // @{
@@ -260,7 +272,10 @@ namespace util::quantities {
     {
       return tebibyte{static_cast<unsigned long long int>(v)};
     }
-    constexpr tebibyte operator""_TiB(unsigned long long int v) { return tebibyte{v}; }
+    constexpr tebibyte operator""_TiB(unsigned long long int v)
+    {
+      return tebibyte{v};
+    }
     // @}
 
     // @{
@@ -269,7 +284,10 @@ namespace util::quantities {
     {
       return pebibyte{static_cast<unsigned long long int>(v)};
     }
-    constexpr pebibyte operator""_PiB(unsigned long long int v) { return pebibyte{v}; }
+    constexpr pebibyte operator""_PiB(unsigned long long int v)
+    {
+      return pebibyte{v};
+    }
     // @}
 
     // @{
@@ -278,7 +296,10 @@ namespace util::quantities {
     {
       return exbibyte{static_cast<unsigned long long int>(v)};
     }
-    constexpr exbibyte operator""_EiB(unsigned long long int v) { return exbibyte{v}; }
+    constexpr exbibyte operator""_EiB(unsigned long long int v)
+    {
+      return exbibyte{v};
+    }
     // @}
 
   } // datasize_literals
