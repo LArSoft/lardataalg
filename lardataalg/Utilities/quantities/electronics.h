@@ -136,14 +136,26 @@ namespace util::quantities {
 
     // @{
     /// Literal tick value.
-    constexpr tick operator""_tick(long double v) { return tick::castFrom(v); }
-    constexpr tick operator""_tick(unsigned long long int v) { return tick::castFrom(v); }
+    constexpr tick operator""_tick(long double v)
+    {
+      return tick::castFrom(v);
+    }
+    constexpr tick operator""_tick(unsigned long long int v)
+    {
+      return tick::castFrom(v);
+    }
     // @}
 
     // @{
     /// Literal tick (`double`-based, `tick_d`) value.
-    constexpr tick_d operator""_tickd(long double v) { return tick_d::castFrom(v); }
-    constexpr tick_d operator""_tickd(unsigned long long int v) { return tick_d::castFrom(v); }
+    constexpr tick_d operator""_tickd(long double v)
+    {
+      return tick_d::castFrom(v);
+    }
+    constexpr tick_d operator""_tickd(unsigned long long int v)
+    {
+      return tick_d::castFrom(v);
+    }
     // @}
 
     // @{
@@ -160,7 +172,10 @@ namespace util::quantities {
 
     // @{
     /// Literal ADC count value (single precision floating points).
-    constexpr counts_f operator""_ADCf(long double v) { return counts_f{static_cast<float>(v)}; }
+    constexpr counts_f operator""_ADCf(long double v)
+    {
+      return counts_f{static_cast<float>(v)};
+    }
     constexpr counts_f operator""_ADCf(unsigned long long int v)
     {
       return counts_f{static_cast<float>(v)};

@@ -341,6 +341,16 @@ void sim::dump::DumpMCTruth(Stream&& out,
                             std::string indent,
                             std::string firstIndent)
 {
+  // add a dumper of the generator info
+  auto genInfo = truth.GeneratorInfo();
+  out << "Generator ID: " << (int)genInfo.generator << "\n";
+  out << "Generator Version: " << genInfo.generatorVersion << "\n";
+  out << "Generator configuration string map.  Pairs separated by colons. "
+      << "\n";
+  for (const auto& gci : genInfo.generatorConfig) {
+    out << "   " << gci.first << " : " << gci.second << "\n";
+  }
+
   unsigned int const nParticles = truth.NParticles();
   out << firstIndent << nParticles << " particles from " << TruthOriginName(truth.Origin());
   if (truth.NeutrinoSet()) {

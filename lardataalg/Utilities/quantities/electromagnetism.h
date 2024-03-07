@@ -234,7 +234,10 @@ namespace util::quantities {
 
     // @{
     /// Literal coulomb value.
-    constexpr coulomb operator""_C(long double v) { return coulomb{static_cast<double>(v)}; }
+    constexpr coulomb operator""_C(long double v)
+    {
+      return coulomb{static_cast<double>(v)};
+    }
     constexpr coulomb operator""_C(unsigned long long int v)
     {
       return coulomb{static_cast<double>(v)};
@@ -303,13 +306,22 @@ namespace util::quantities {
 
     // @{
     /// Literal volt value.
-    constexpr volt operator""_V(long double v) { return volt{static_cast<double>(v)}; }
-    constexpr volt operator""_V(unsigned long long int v) { return volt{static_cast<double>(v)}; }
+    constexpr volt operator""_V(long double v)
+    {
+      return volt{static_cast<double>(v)};
+    }
+    constexpr volt operator""_V(unsigned long long int v)
+    {
+      return volt{static_cast<double>(v)};
+    }
     // @}
 
     // @{
     /// Literal millivolt value.
-    constexpr millivolt operator""_mV(long double v) { return millivolt{static_cast<double>(v)}; }
+    constexpr millivolt operator""_mV(long double v)
+    {
+      return millivolt{static_cast<double>(v)};
+    }
     constexpr millivolt operator""_mV(unsigned long long int v)
     {
       return millivolt{static_cast<double>(v)};
@@ -318,7 +330,10 @@ namespace util::quantities {
 
     // @{
     /// Literal microvolt value.
-    constexpr microvolt operator""_uV(long double v) { return microvolt{static_cast<double>(v)}; }
+    constexpr microvolt operator""_uV(long double v)
+    {
+      return microvolt{static_cast<double>(v)};
+    }
     constexpr microvolt operator""_uV(unsigned long long int v)
     {
       return microvolt{static_cast<double>(v)};
@@ -327,7 +342,10 @@ namespace util::quantities {
 
     // @{
     /// Literal kilovolt value.
-    constexpr kilovolt operator""_kV(long double v) { return kilovolt{static_cast<double>(v)}; }
+    constexpr kilovolt operator""_kV(long double v)
+    {
+      return kilovolt{static_cast<double>(v)};
+    }
     constexpr kilovolt operator""_kV(unsigned long long int v)
     {
       return kilovolt{static_cast<double>(v)};
@@ -336,7 +354,10 @@ namespace util::quantities {
 
     // @{
     /// Literal megavolt value.
-    constexpr megavolt operator""_MV(long double v) { return megavolt{static_cast<double>(v)}; }
+    constexpr megavolt operator""_MV(long double v)
+    {
+      return megavolt{static_cast<double>(v)};
+    }
     constexpr megavolt operator""_MV(unsigned long long int v)
     {
       return megavolt{static_cast<double>(v)};
@@ -345,7 +366,10 @@ namespace util::quantities {
 
     // @{
     /// Literal gigavolt value.
-    constexpr gigavolt operator""_GV(long double v) { return gigavolt{static_cast<double>(v)}; }
+    constexpr gigavolt operator""_GV(long double v)
+    {
+      return gigavolt{static_cast<double>(v)};
+    }
     constexpr gigavolt operator""_GV(unsigned long long int v)
     {
       return gigavolt{static_cast<double>(v)};

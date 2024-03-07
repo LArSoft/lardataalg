@@ -127,7 +127,10 @@ namespace util::quantities {
 
     // @{
     /// Literal hertz value.
-    constexpr hertz operator""_Hz(long double v) { return hertz{static_cast<double>(v)}; }
+    constexpr hertz operator""_Hz(long double v)
+    {
+      return hertz{static_cast<double>(v)};
+    }
     constexpr hertz operator""_Hz(unsigned long long int v)
     {
       return hertz{static_cast<double>(v)};
@@ -136,7 +139,10 @@ namespace util::quantities {
 
     // @{
     /// Literal kilohertz value.
-    constexpr kilohertz operator""_kHz(long double v) { return kilohertz{static_cast<double>(v)}; }
+    constexpr kilohertz operator""_kHz(long double v)
+    {
+      return kilohertz{static_cast<double>(v)};
+    }
     constexpr kilohertz operator""_kHz(unsigned long long int v)
     {
       return kilohertz{static_cast<double>(v)};
@@ -145,7 +151,10 @@ namespace util::quantities {
 
     // @{
     /// Literal megahertz value.
-    constexpr megahertz operator""_MHz(long double v) { return megahertz{static_cast<double>(v)}; }
+    constexpr megahertz operator""_MHz(long double v)
+    {
+      return megahertz{static_cast<double>(v)};
+    }
     constexpr megahertz operator""_MHz(unsigned long long int v)
     {
       return megahertz{static_cast<double>(v)};
@@ -154,7 +163,10 @@ namespace util::quantities {
 
     // @{
     /// Literal gigahertz value.
-    constexpr gigahertz operator""_GHz(long double v) { return gigahertz{static_cast<double>(v)}; }
+    constexpr gigahertz operator""_GHz(long double v)
+    {
+      return gigahertz{static_cast<double>(v)};
+    }
     constexpr gigahertz operator""_GHz(unsigned long long int v)
     {
       return gigahertz{static_cast<double>(v)};

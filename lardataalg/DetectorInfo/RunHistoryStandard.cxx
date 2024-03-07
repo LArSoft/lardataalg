@@ -17,7 +17,10 @@ namespace detinfo {
   RunHistoryStandard::RunHistoryStandard() : fRun(-1), fNSubruns(0), fRunType(kUnknownRunType) {}
 
   //-----------------------------------------------
-  RunHistoryStandard::RunHistoryStandard(int run) { fRun = run; }
+  RunHistoryStandard::RunHistoryStandard(int run)
+  {
+    fRun = run;
+  }
 
   //------------------------------------------------
   RunHistoryStandard::~RunHistoryStandard() {}
