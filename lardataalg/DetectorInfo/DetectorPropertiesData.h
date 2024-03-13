@@ -17,7 +17,7 @@ namespace detinfo {
                                     std::vector<std::vector<double>>&& drift_direction);
 
     double Efield(unsigned int planegap = 0) const; ///< kV/cm
-    geo::Vector_t NomEfieldDir(geo::TPCID const& tpcid); /// Unit vector 
+    geo::Vector_t NomEfieldDir(geo::TPCID const& tpcid) const; /// Unit vector 
 
     double DriftVelocity(double efield = 0.,
                          double temperature = 0.) const; ///< cm/us
