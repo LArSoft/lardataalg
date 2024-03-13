@@ -13,7 +13,10 @@
 #include "larcoreobj/SimpleTypesAndConstants/geo_vectors.h"
 
 // Forward declarations
-class geo::TPCID;
+namespace geo
+{
+  class TPCID;
+}
 
 /// General LArSoft Utilities
 namespace detinfo {
