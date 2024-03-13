@@ -60,17 +60,14 @@ namespace detinfo {
     fNumberTimeSamples = config().NumberTimeSamples();
     fReadOutWindowSize = config().ReadOutWindowSize();
 
-    // The Efield direction is calculable from the geometry. Do that here
+    // Cache nominal Efield directino by cryo and tpc number
     //
-    fNomEfieldDir.resize(fGeo->NCryostats());
-    for (auto icryo : fNomEfieldDir) {
-      fNomEfieldDir[icryo].resize(fGeo->NTPC(icryo));
-      for (auto itpc : fNomEfieldDir[icryo]) {
-
-
+    fNomEfieldDirection.resize(fGeo->Ncryostats());
+    for (unsigned int icryo = 0 ; icryo < fNomEfieldDirection.size() ; ++icryo) {
+      fNomEfieldDirection[icryo].resize(fGeo->NTPC(geo::CryostatID{icryo}));
+      for (unsigned int itpc = 0 ; itpc < fNomEfieldDirection.size() ; ++itpc ) { 
+        fNomEfieldDirection[icryo][itpc] = -(fGeo->TPC(geo::TPCID{icryo,itpc}).DriftDir());
       }
-      
-
     }
 
     std::set<geo::View_t> present_views;
@@ -115,12 +112,9 @@ namespace detinfo {
   }
 
   //------------------------------------------------------------------------------------//
-  geo::Vector_t DetectorPropertiesStandard::NomEfieldDir(geo::TPCID tpcid) const
+  geo::Vector_t DetectorPropertiesStandard::NomEfieldDir(geo::TPCID const& tpcid) const
   {
-    // We have the geometry, so just return the calculable value
-    // Efield points opposite of electron drift dir
-    const geo::TPCID& tpcGeo = fGeo->TPC(tpcid);
-    return -tpcGeo.DriftDir();
+    return fNomEfieldDirection[tpcid.Cryostat][tpcid.TPC];
   }
   //------------------------------------------------
   double DetectorPropertiesStandard::Density(double temperature) const

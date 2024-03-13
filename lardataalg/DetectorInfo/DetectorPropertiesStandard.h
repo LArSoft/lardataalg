@@ -31,7 +31,10 @@
 #include <set>
 
 // Forward declarations
-class geo::TPCID;
+namespace geo
+{
+  class TPCID;
+}
 
 /// General LArSoft Utilities
 namespace detinfo {
@@ -291,7 +294,8 @@ namespace detinfo {
 
     SternheimerParameters_t fSternheimerParameters; ///< Sternheimer parameters
 
-    std::vector<std::vector<double>> fDriftDirection;
+    // Cached nom Efield direction
+    std::vector<std::vector<geo::Vector_t>> fNomEfieldDirection;
 
     bool fSimpleBoundary;
 
