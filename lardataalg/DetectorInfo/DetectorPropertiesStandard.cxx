@@ -391,7 +391,7 @@ namespace detinfo {
         const geo::TPCGeo& tpcgeom = cryostat.TPC(tpc);
         auto const& tpcid = tpcgeom.ID();
 
-        const double dir = to_int(tpcgeom.DriftSign());
+        const double dir = -to_int(tpcgeom.DriftSign());
         drift_direction[cstat][tpc] = dir;
 
         unsigned int nplane = fChannelMap->Nplanes(tpcid);
