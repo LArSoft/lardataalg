@@ -13,6 +13,7 @@
 #include "larcorealg/Geometry/GeometryCore.h"
 #include "larcorealg/Geometry/PlaneGeo.h"
 #include "larcorealg/Geometry/TPCGeo.h"
+#include "larcorealg/Geometry/WireReadoutGeom.h"
 
 #include "cetlib/pow.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
@@ -23,14 +24,40 @@
 // C/C++ libraries
 #include <sstream> // std::ostringstream
 
+namespace {
+  std::string CheckTimeOffsets(std::set<geo::View_t> const& requested_views,
+                               geo::WireReadoutGeom const& wireReadoutGeom)
+  {
+    auto const& present_views = wireReadoutGeom.Views();
+
+    auto view_diff = [&present_views, &requested_views](geo::View_t const view) {
+      return static_cast<int>(present_views.count(view)) -
+             static_cast<int>(requested_views.count(view));
+    };
+
+    // It is not an error to specify an offset if the view does not
+    // exist.  However, if a view does exist, and an offset does not,
+    // then that will end the job.
+    std::ostringstream errors;
+    if (auto diff = view_diff(geo::kU); diff > 0) { errors << "TimeOffsetU missing for view U.\n"; }
+    if (auto diff = view_diff(geo::kV); diff > 0) { errors << "TimeOffsetV missing for view V.\n"; }
+    if (auto diff = view_diff(geo::kZ); diff > 0) { errors << "TimeOffsetZ missing for view Z.\n"; }
+    if (auto diff = view_diff(geo::kY); diff > 0) { errors << "TimeOffsetY missing for view Y.\n"; }
+    if (auto diff = view_diff(geo::kX); diff > 0) { errors << "TimeOffsetX missing for view X.\n"; }
+    return errors.str();
+  }
+}
+
 namespace detinfo {
 
   //--------------------------------------------------------------------
-  DetectorPropertiesStandard::DetectorPropertiesStandard(fhicl::ParameterSet const& pset,
-                                                         const geo::GeometryCore* geo,
-                                                         const detinfo::LArProperties* lp,
-                                                         std::set<std::string> const& ignore_params)
-    : fLP(lp), fGeo(geo)
+  DetectorPropertiesStandard::DetectorPropertiesStandard(
+    fhicl::ParameterSet const& pset,
+    geo::GeometryCore const* geo,
+    geo::WireReadoutGeom const* wireReadoutGeom,
+    detinfo::LArProperties const* lp,
+    std::set<std::string> const& ignore_params)
+    : fLP(lp), fGeo(geo), fChannelMap(wireReadoutGeom)
   {
     ValidateAndConfigure(pset, ignore_params);
   }
@@ -67,7 +94,7 @@ namespace detinfo {
     if (config().TimeOffsetY(fTimeOffsetY)) present_views.insert(geo::kY);
     if (config().TimeOffsetX(fTimeOffsetX)) present_views.insert(geo::kX);
 
-    std::string const errors = CheckTimeOffsets(present_views);
+    std::string const errors = CheckTimeOffsets(present_views, *fChannelMap);
     if (!errors.empty()) {
       throw cet::exception("DetectorPropertiesStandard") << "Detected configuration errors: \n"
                                                          << errors;
@@ -184,12 +211,12 @@ namespace detinfo {
   //------------------------------------------------------------------------------------//
   double DetectorPropertiesStandard::DriftVelocity(double efield, double temperature) const
   {
-    // Drift Velocity as a function of Electric Field and LAr Temperature
-    // from : W. Walkowiak, NIM A 449 (2000) 288-294
+    // Drift Velocity as a function of Electric Field and LAr Temperature from:
+    // W. Walkowiak, NIM A 449 (2000) 288-294
     //
-    // Option to use MicroBooNE+ICARUS model (as in arXiv:2008.09765) provided as
-    // well, with temperature depenence as prescribed by Mike Mooney based on
-    // looking at the Walkowiak data.
+    // Option to use MicroBooNE+ICARUS model (as in arXiv:2008.09765) provided as well,
+    // with temperature depenence as prescribed by Mike Mooney based on looking at the
+    // Walkowiak data.
     //
     // Efield should have units of kV/cm
     // Temperature should have units of Kelvin
@@ -200,9 +227,8 @@ namespace detinfo {
     if (efield > 4.0)
       mf::LogWarning("DetectorPropertiesStandard")
         << "DriftVelocity Warning! : E-field value of " << efield
-        << " kV/cm is outside of range covered by drift"
-        << " velocity parameterization. Returned value"
-        << " may not be correct";
+        << " kV/cm is outside of range covered by drift velocity parameterization. Returned value "
+           "may not be correct";
 
     // Default temperature use internal value.
     if (temperature == 0.) temperature = Temperature();
@@ -210,9 +236,8 @@ namespace detinfo {
     if (temperature < 87.0 || temperature > 94.0)
       mf::LogWarning("DetectorPropertiesStandard")
         << "DriftVelocity Warning! : Temperature value of " << temperature
-        << " K is outside of range covered by drift velocity"
-        << " parameterization. Returned value may not be"
-        << " correct";
+        << " K is outside of range covered by drift velocity parameterization. Returned value may "
+           "not be correct";
 
     double vd;
 
@@ -364,26 +389,24 @@ namespace detinfo {
 
       for (size_t tpc = 0; tpc < cryostat.NTPC(); ++tpc) {
         const geo::TPCGeo& tpcgeom = cryostat.TPC(tpc);
+        auto const& tpcid = tpcgeom.ID();
 
-        const double dir((tpcgeom.DriftDirection() == geo::kNegX) ? +1.0 : -1.0);
+        const double dir = -to_int(tpcgeom.DriftSign());
         drift_direction[cstat][tpc] = dir;
 
-        int nplane = tpcgeom.Nplanes();
+        unsigned int nplane = fChannelMap->Nplanes(tpcid);
         x_ticks_offsets[cstat][tpc].resize(nplane, 0.);
-        for (int plane = 0; plane < nplane; ++plane) {
-          const geo::PlaneGeo& pgeom = tpcgeom.Plane(plane);
 
-          //Choose which plane to propagate to
-          //If accounting for the drift time between planes, start with the first plane,
-          //and iteratively add distances between planes
-          //Otherwise propagate straight to the last plane and
-          //assume a standard drift velocity (for wirecell recob::Wires)
-          unsigned int planeToPropagateTo =
-            (fIncludeInterPlanePitchInXTickOffsets ? 0 : tpcgeom.Nplanes() - 1);
-          // Calculate geometric time offset.
-          // only works if xyz[0]<=0
-          auto const xyz = tpcgeom.Plane(planeToPropagateTo).GetCenter();
+        // Choose which plane to propagate to.  If accounting for the drift time between
+        // planes, start with the first plane, and iteratively add distances between
+        // planes Otherwise propagate straight to the last plane and assume a standard
+        // drift velocity (for wirecell recob::Wires)
+        unsigned int planeToPropagateTo = fIncludeInterPlanePitchInXTickOffsets ? 0 : nplane - 1;
 
+        // Calculate geometric time offset (only works if xyz.X() <=0 )
+        auto const xyz = fChannelMap->Plane({tpcid, planeToPropagateTo}).GetCenter();
+        for (geo::PlaneGeo const& pgeom : fChannelMap->Iterate<geo::PlaneGeo>(tpcid)) {
+          unsigned int const plane = pgeom.ID().Plane;
           x_ticks_offsets[cstat][tpc][plane] =
             -xyz.X() / (dir * x_ticks_coefficient) + triggerOffset;
 
@@ -409,9 +432,9 @@ namespace detinfo {
                 |    ---------- x = 0
                 V     For plane = 0, t offset is -xyz[0]/Coeff[0]
                 x   */
-              for (int ip = 0; ip < plane; ++ip) {
+              for (unsigned int ip = 0; ip < plane; ++ip) {
                 x_ticks_offsets[cstat][tpc][plane] +=
-                  tpcgeom.PlanePitch(ip, ip + 1) / x_ticks_coefficient_gap[ip + 1];
+                  fChannelMap->PlanePitch(tpcid, ip, ip + 1) / x_ticks_coefficient_gap[ip + 1];
               }
             }
             else if (nplane == 2) { ///< special case for ArgoNeuT
@@ -426,12 +449,13 @@ namespace detinfo {
                 (pitch+xyz[0])/Coeff[0] = -xyz[0]/Coeff[0] -
                 pitch*(1/Coeff[0]-1/Coeff[1])
               */
-              for (int ip = 0; ip < plane; ++ip) {
+              for (unsigned int ip = 0; ip < plane; ++ip) {
                 x_ticks_offsets[cstat][tpc][plane] +=
-                  tpcgeom.PlanePitch(ip, ip + 1) / x_ticks_coefficient_gap[ip + 2];
+                  fChannelMap->PlanePitch(tpcid, ip, ip + 1) / x_ticks_coefficient_gap[ip + 2];
               }
               x_ticks_offsets[cstat][tpc][plane] -=
-                tpcgeom.PlanePitch() * (1 / x_ticks_coefficient - 1 / x_ticks_coefficient_gap[1]);
+                fChannelMap->PlanePitch(tpcid) *
+                (1 / x_ticks_coefficient - 1 / x_ticks_coefficient_gap[1]);
             }
 
           } // end if fIncludeInterPlanePitchInXTickOffsets
@@ -453,27 +477,5 @@ namespace detinfo {
 
     return DetectorPropertiesData{
       *this, x_ticks_coefficient, move(x_ticks_offsets), move(drift_direction)};
-  }
-
-  std::string DetectorPropertiesStandard::CheckTimeOffsets(
-    std::set<geo::View_t> const& requested_views) const
-  {
-    auto const& present_views = fGeo->Views();
-
-    auto view_diff = [&present_views, &requested_views](geo::View_t const view) {
-      return static_cast<int>(present_views.count(view)) -
-             static_cast<int>(requested_views.count(view));
-    };
-
-    // It is not an error to specify an offset if the view does not
-    // exist.  However, if a view does exist, and an offset does not,
-    // then that will end the job.
-    std::ostringstream errors;
-    if (auto diff = view_diff(geo::kU); diff > 0) { errors << "TimeOffsetU missing for view U.\n"; }
-    if (auto diff = view_diff(geo::kV); diff > 0) { errors << "TimeOffsetV missing for view V.\n"; }
-    if (auto diff = view_diff(geo::kZ); diff > 0) { errors << "TimeOffsetZ missing for view Z.\n"; }
-    if (auto diff = view_diff(geo::kY); diff > 0) { errors << "TimeOffsetY missing for view Y.\n"; }
-    if (auto diff = view_diff(geo::kX); diff > 0) { errors << "TimeOffsetX missing for view X.\n"; }
-    return errors.str();
   }
 } // namespace
