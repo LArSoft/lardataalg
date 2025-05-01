@@ -93,8 +93,7 @@ namespace sim {
                                   std::string indent,
                                   bool printPosition = true,
                                   bool printMomentum = false,
-                                  bool printEnergy = false
-                                  );
+                                  bool printEnergy = false);
 
     template <typename Stream>
     void DumpMCParticleTrajectory(Stream&& out, simb::MCTrajectory const& trajectory)
@@ -301,37 +300,51 @@ void sim::dump::DumpMCParticleTrajectory(Stream&& out,
                                          bool printMomentum /* = false */,
                                          bool printEnergy /* = false */)
 {
-  
+
   struct PointDumper {
-    
+
     Stream& out;
     bool const doPosition = true;
     bool const doMomentum = true;
     bool const doEnergy = true;
-    
+
     void printPosition(TLorentzVector const& pos) const { out << pos << " cm"; }
     void printEnergy(double E) const { out << "E=" << E << " GeV"; }
-    void printMomentum(TLorentzVector const& cp) const { out << "( " << cp.Px() << " , " << cp.Py() << " , " << cp.Pz() << " ) GeV/c"; }
-    
-    void operator() (std::pair<TLorentzVector, TLorentzVector> const& posAndMom) const
-      {
-        struct Spacer {
-          unsigned int nCalls = 0;
-          void operator() (Stream& out) { if (nCalls++) out << ", "; }
-        };
-        
-        Spacer spacer;
-        if (doPosition) { spacer(out); printPosition(posAndMom.first); }
-        if (doMomentum) { spacer(out); printMomentum(posAndMom.second); }
-        if (doEnergy)   { spacer(out); printEnergy(posAndMom.second.E()); }
-        if (spacer.nCalls == 0) out << '.'; // we promised we would print the point...
+    void printMomentum(TLorentzVector const& cp) const
+    {
+      out << "( " << cp.Px() << " , " << cp.Py() << " , " << cp.Pz() << " ) GeV/c";
+    }
+
+    void operator()(std::pair<TLorentzVector, TLorentzVector> const& posAndMom) const
+    {
+      struct Spacer {
+        unsigned int nCalls = 0;
+        void operator()(Stream& out)
+        {
+          if (nCalls++) out << ", ";
+        }
+      };
+
+      Spacer spacer;
+      if (doPosition) {
+        spacer(out);
+        printPosition(posAndMom.first);
       }
-    
+      if (doMomentum) {
+        spacer(out);
+        printMomentum(posAndMom.second);
+      }
+      if (doEnergy) {
+        spacer(out);
+        printEnergy(posAndMom.second.E());
+      }
+      if (spacer.nCalls == 0) out << '.'; // we promised we would print the point...
+    }
+
   }; // PointDumper
-  
-  
-  PointDumper const dumpPoint{ out, printPosition, printMomentum, printEnergy };
-  
+
+  PointDumper const dumpPoint{out, printPosition, printMomentum, printEnergy};
+
   unsigned int page = 0;
   for (auto const& pair : trajectory) {
     if ((pointsPerLine > 0) && (page-- == 0)) {
