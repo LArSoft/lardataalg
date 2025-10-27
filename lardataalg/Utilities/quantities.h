@@ -252,6 +252,14 @@ namespace util::quantities {
       //------------------------------------------------------------------------
       //--- Unit-related
       //------------------------------------------------------------------------
+      /// Implementation of `is_base_unit_v`.
+      template <typename T, typename = void>
+      struct is_base_unit : std::false_type {};
+
+      /// Implementation of `base_unit_of`.
+      template <typename T, typename = void>
+      struct base_unit_extactor;
+
       /// Trait: `true_type` if `U` is a `ScaledUnit`-based object.
       template <typename U>
       struct has_unit;
@@ -378,6 +386,19 @@ namespace util::quantities {
 
     }; // struct Prefix
 
+    /// Trait: `T` implements a `BaseUnit` interface.
+    template <typename T>
+    constexpr bool is_base_unit_v = details::is_base_unit<T>::value;
+
+    /**
+     * @brief Trait: base unit of the specified object.
+     *
+     * Supports `Quantity`, `Unit`, `Interval` and `Point`.
+     * It also sort-of-supports `UnitBase` and the like.
+     */
+    template <typename T>
+    using base_unit_of = typename details::base_unit_extactor<T>::type;
+
     template <typename U, typename R = std::ratio<1>>
     struct ScaledUnit {
 
@@ -458,7 +479,7 @@ namespace util::quantities {
       template <typename OU>
       static constexpr bool sameBaseUnitAs()
       {
-        return std::is_same<baseunit_t, typename OU::baseunit_t>();
+        return std::is_same<baseunit_t, base_unit_of<OU>>();
       }
 
       /// Returns whether scaled unit `U` has the same base unit as this one.
@@ -592,6 +613,71 @@ namespace util::quantities {
       /// Explicit conversion to the base quantity.
       explicit constexpr operator value_t() const { return value(); }
 
+      // -- BEGIN Access to the scaled unit ------------------------------------
+      /// @name Access to the scaled unit.
+      /// @{
+
+      /// Returns an object with as type the scaled unit (`unit_t`).
+      static constexpr unit_t unit() { return {}; }
+
+      /// Returns an object with as type the base unit (`baseunit_t`).
+      static constexpr baseunit_t baseUnit() { return {}; }
+
+      /// Returns the full name of the unit, in a string-like object.
+      static auto unitName() { return unit_t::name(); }
+
+      /// Returns the symbol of the unit, in a string-like object.
+      static auto unitSymbol() { return unit_t::symbol(); }
+
+      /**
+       * @brief Returns whether this quantity has the same base unit as `OU`.
+       * @param OU any type with `baseunit_t` type
+       *           (including `ScaledUnit`, `Quantity`, `Interval`...)
+       */
+      template <typename OU>
+      static constexpr bool sameBaseUnitAs()
+      {
+        return unit_t::template sameBaseUnitAs<OU>();
+      }
+
+      /**
+       * @brief Returns whether this quantity has same unit and scale as `OU`.
+       * @param OU any type with `unit_t` type
+       *           (including `ScaledUnit`, `Quantity`, `Interval`...)
+       */
+      template <typename OU>
+      static constexpr bool sameUnitAs()
+      {
+        return unit_t::template sameUnitAs<OU>();
+      }
+
+      /// Whether `U` is a value type compatible with `value_t`.
+      template <typename U>
+      static constexpr bool is_compatible_value_v = details::is_value_compatible_with_v<U, value_t>;
+
+      /// Whether `U` has (or is) a value type compatible with `value_t`.
+      template <typename U>
+      static constexpr bool has_compatible_value_v =
+        details::has_value_compatible_with_v<U, value_t>;
+
+      /// Returns whether `U` is a value type compatible with `value_t`.
+      template <typename U>
+      static constexpr bool isCompatibleValue()
+      {
+        return quantity_t::is_compatible_value_v<U>;
+      }
+
+      /// Returns whether `U` has (or is) a value type compatible with
+      /// `value_t`.
+      template <typename U>
+      static constexpr bool hasCompatibleValue()
+      {
+        return quantity_t::has_compatible_value_v<U>;
+      }
+
+      /// @}
+      // -- END Access to the scaled unit --------------------------------------
+
       // -- BEGIN Asymmetric arithmetic operations -----------------------------
       /**
        * @name Asymmetric operand arithmetic operations
@@ -719,71 +805,6 @@ namespace util::quantities {
 
       /// @}
       // -- END Asymmetric arithmetic operations -------------------------------
-
-      // -- BEGIN Access to the scaled unit ------------------------------------
-      /// @name Access to the scaled unit.
-      /// @{
-
-      /// Returns an object with as type the scaled unit (`unit_t`).
-      static constexpr unit_t unit() { return {}; }
-
-      /// Returns an object with as type the base unit (`baseunit_t`).
-      static constexpr baseunit_t baseUnit() { return {}; }
-
-      /// Returns the full name of the unit, in a string-like object.
-      static auto unitName() { return unit_t::name(); }
-
-      /// Returns the symbol of the unit, in a string-like object.
-      static auto unitSymbol() { return unit_t::symbol(); }
-
-      /**
-       * @brief Returns whether this quantity has the same base unit as `OU`.
-       * @param OU any type with `baseunit_t` type
-       *           (including `ScaledUnit`, `Quantity`, `Interval`...)
-       */
-      template <typename OU>
-      static constexpr bool sameBaseUnitAs()
-      {
-        return unit_t::template sameBaseUnitAs<OU>();
-      }
-
-      /**
-       * @brief Returns whether this quantity has same unit and scale as `OU`.
-       * @param OU any type with `unit_t` type
-       *           (including `ScaledUnit`, `Quantity`, `Interval`...)
-       */
-      template <typename OU>
-      static constexpr bool sameUnitAs()
-      {
-        return unit_t::template sameUnitAs<OU>();
-      }
-
-      /// Whether `U` is a value type compatible with `value_t`.
-      template <typename U>
-      static constexpr bool is_compatible_value_v = details::is_value_compatible_with_v<U, value_t>;
-
-      /// Whether `U` has (or is) a value type compatible with `value_t`.
-      template <typename U>
-      static constexpr bool has_compatible_value_v =
-        details::has_value_compatible_with_v<U, value_t>;
-
-      /// Returns whether `U` is a value type compatible with `value_t`.
-      template <typename U>
-      static constexpr bool isCompatibleValue()
-      {
-        return quantity_t::is_compatible_value_v<U>;
-      }
-
-      /// Returns whether `U` has (or is) a value type compatible with
-      /// `value_t`.
-      template <typename U>
-      static constexpr bool hasCompatibleValue()
-      {
-        return quantity_t::has_compatible_value_v<U>;
-      }
-
-      /// @}
-      // -- END Access to the scaled unit --------------------------------------
 
       /// Convert this quantity into the specified one.
       template <typename OQ>
@@ -1214,6 +1235,32 @@ namespace util::quantities::concepts::details {
 //------------------------------------------------------------------------------
 //--- template implementation
 //------------------------------------------------------------------------------
+/// Implementation of `is_base_unit_v` for actual base unit objects
+/// (e.g. `BaseUnit`): asks the complete `BaseUnit` mandatory interface.
+template <typename U>
+struct util::quantities::concepts::details::is_base_unit<
+  U,
+  std::enable_if_t<std::is_same_v<std::decay_t<decltype(U::name)>, std::string_view> &
+                   std::is_same_v<std::decay_t<decltype(U::symbol)>, std::string_view>>>
+  : std::true_type {};
+
+/// Implementation of `base_unit_of` supporting `Quantity`, `Unit`, `Interval`
+/// and `Point` (and any class accidentally declaring a `baseunit_t` type).
+template <typename Q>
+struct util::quantities::concepts::details::
+  base_unit_extactor<Q, std::void_t<typename Q::baseunit_t>> {
+  using type = typename Q::baseunit_t;
+};
+
+/// Implementation of `base_unit_of` supporting a base unit itself
+/// (e.g. `BaseUnit`) by asking the complete `BaseUnit` mandatory interface.
+template <typename U>
+struct util::quantities::concepts::details::
+  base_unit_extactor<U, std::enable_if_t<util::quantities::concepts::is_base_unit_v<U>>> {
+  using type = U;
+};
+
+//------------------------------------------------------------------------------
 //--- util::quantities::concepts::Prefix
 //------------------------------------------------------------------------------
 template <typename R>
@@ -1303,10 +1350,8 @@ constexpr auto util::quantities::concepts::Quantity<U, T>::minus(Quantity<OU, OT
 template <typename U, typename T>
 template <typename OU, typename OT>
 constexpr auto util::quantities::concepts::Quantity<U, T>::operator/(Quantity<OU, OT> const q) const
-  -> value_t
+  -> std::enable_if_t<quantity_t::sameBaseUnitAs<OU>(), value_t>
 {
-  static_assert(sameBaseUnitAs<OU>(), "Can't divide quantities with different base unit");
-
   // if the two quantities have the same *scaled* unit, divide
   if constexpr (sameUnitAs<OU>()) { return value() / q.value(); }
   else {
