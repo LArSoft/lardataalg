@@ -9,6 +9,10 @@
  * defined based on the following units:
  * * seconds (ps, ns, us, ms, s), with intervals in `intervals` namespace
  *
+ * @note If the following headers are loaded, relationship between these and
+ *       some of their quantities are registered:
+ *       * `electromagnetism.h` (e.g. Ω·F = s).
+ *
  * This is a header-only library.
  *
  */
@@ -849,6 +853,16 @@ namespace util::quantities {
   // -- END Space --------------------------------------------------------------
 
 } // namespace util::quantities
+
+// --- BEGIN Special relations -------------------------------------------------
+
+// unit relations (they are defined in `util::quantities::concepts::details`,
+//   so the `util::quantities::units` namespace can be shortened)
+#ifdef LARDATAALG_UTILITIES_QUANTITIES_ELECTROMAGNETISM_H
+UTIL_QUANTITIES_UNITPRODUCT(units::Ohm, units::Farad, units::Second);
+#endif
+
+// --- END Special relations ---------------------------------------------------
 
 //------------------------------------------------------------------------------
 

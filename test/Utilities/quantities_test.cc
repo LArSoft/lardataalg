@@ -107,7 +107,7 @@ void test_quantities_conversions()
   //
   // conversions to other scales
   //
-  util::quantities::seconds t_s{7.0};
+  constexpr util::quantities::seconds t_s{7.0};
 
   BOOST_TEST(t_s.value() == 7.0);
 
