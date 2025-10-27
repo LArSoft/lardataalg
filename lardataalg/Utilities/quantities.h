@@ -1276,6 +1276,8 @@ struct util::quantities::concepts::details::
 template <typename R>
 constexpr auto util::quantities::concepts::Prefix<R>::names(bool Long /* = false */)
 {
+  if constexpr (std::is_same<ratio, std::exa>()) return Long ? "peta"sv : "E"sv;
+  if constexpr (std::is_same<ratio, std::peta>()) return Long ? "peta"sv : "P"sv;
   if constexpr (std::is_same<ratio, std::tera>()) return Long ? "tera"sv : "T"sv;
   if constexpr (std::is_same<ratio, std::giga>()) return Long ? "giga"sv : "G"sv;
   if constexpr (std::is_same<ratio, std::mega>()) return Long ? "mega"sv : "M"sv;
@@ -1288,7 +1290,7 @@ constexpr auto util::quantities::concepts::Prefix<R>::names(bool Long /* = false
   if constexpr (std::is_same<ratio, std::nano>()) return Long ? "nano"sv : "n"sv;
   if constexpr (std::is_same<ratio, std::pico>()) return Long ? "pico"sv : "p"sv;
   if constexpr (std::is_same<ratio, std::femto>()) return Long ? "femto"sv : "f"sv;
-  // TODO complete the long list of prefixes
+  if constexpr (std::is_same<ratio, std::femto>()) return Long ? "atto"sv : "a"sv;
 
   // backup; can't use `to_string()` because of `constexpr` requirement
   return Long ? "???"sv : "?"sv;
