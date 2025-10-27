@@ -732,7 +732,8 @@ namespace util::quantities {
 
       /// Division by a quantity, returns a pure number.
       template <typename OU, typename OT>
-      constexpr value_t operator/(Quantity<OU, OT> q) const;
+      constexpr std::enable_if_t<quantity_t::sameBaseUnitAs<OU>(), value_t> operator/(
+        Quantity<OU, OT> q) const;
 
       /// Add the `other` quantity (possibly concerted) to this one.
       template <typename OU, typename OT>
@@ -824,7 +825,7 @@ namespace util::quantities {
       }
 
       /**
-       * @brief Returns a new quantity initialized with the specified value
+       * @brief Returns a new quantity initialized with the specified value.
        * @tparam U type to initialize the quantity with
        * @param value the value to initialize the quantity with
        * @return a new `Quantity` object initialized with `value`
@@ -906,13 +907,6 @@ namespace util::quantities {
     {
       return q * factor;
     }
-    //@}
-
-    //@{
-    /// Multiplication between quantities is forbidden.
-    template <typename AU, typename AT, typename BU, typename BT>
-    constexpr auto operator*(Quantity<AU, AT>, Quantity<BU, BT>)
-      -> decltype(std::declval<AT>() * std::declval<BT>()) = delete;
     //@}
 
     //@{
@@ -1694,6 +1688,11 @@ namespace std {
   // ---------------------------------------------------------------------------
 
 } // namespace std
+
+//------------------------------------------------------------------------------
+//--- products of quantities implementation
+
+#include "details/quantity_products.h"
 
 //------------------------------------------------------------------------------
 
