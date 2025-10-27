@@ -120,7 +120,11 @@ void test_quantities_conversions()
 
   static_assert(std::is_same<decltype(t.convertInto<util::quantities::microseconds>()),
                              util::quantities::microseconds>());
-  BOOST_TEST(t.convertInto<util::quantities::microseconds>() == 7'000'000_us);
+  BOOST_TEST(t_s.convertInto<util::quantities::microseconds>() == 7'000'000_us);
+
+  static_assert(
+    std::is_same_v<decltype(t_s.asValueType<float>()), util::quantities::seconds_as<float>>);
+  static_assert(t_s.asValueType<float>() == t_s);
 
 } // test_quantities_conversions()
 

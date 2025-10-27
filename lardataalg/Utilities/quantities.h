@@ -598,6 +598,9 @@ namespace util::quantities {
        * Quantities are required to be in the same unit (unit scale may differ).
        * The value in `q` is converted from its native scale into the one of
        * this quantity.
+       *
+       * This assignment prevents narrowing. To force narrowing, convert the
+       * operand quantity to a number or "cast" it with `asValueType<>()`.
        */
       template <typename Q, typename std::enable_if_t<details::is_quantity_v<Q>>* = nullptr>
       constexpr Quantity(Q q)
@@ -811,6 +814,13 @@ namespace util::quantities {
       constexpr OQ convertInto() const
       {
         return OQ(*this);
+      }
+
+      /// Returns a new quantity with same unit and value using value type `OT`.
+      template <typename OT>
+      constexpr Quantity<unit_t, OT> asValueType() const
+      {
+        return Quantity<unit_t, OT>{static_cast<OT>(value())};
       }
 
       /**
