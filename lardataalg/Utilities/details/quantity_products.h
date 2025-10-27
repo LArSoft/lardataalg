@@ -254,6 +254,9 @@ namespace util::quantities::concepts {
  *
  * It requires all the operands to be base unit types (no `ScaledUnit`),
  * and that the product unit is neither of the factor ones.
+ *
+ * @note For product of the same unit, use `UTIL_QUANTITIES_UNITSQUARE()`
+ *       instead.
  */
 #define UTIL_QUANTITIES_UNITPRODUCT(UA, UB, UP)                                                    \
   namespace util::quantities::concepts::details {                                                  \
@@ -265,6 +268,8 @@ namespace util::quantities::concepts {
                   "The third type does not meet base unit class requirements.");                   \
     static_assert(!std::is_same_v<UP, UA>, "A factor can't have the same unit as the product.");   \
     static_assert(!std::is_same_v<UP, UB>, "B factor can't have the same unit as the product.");   \
+    static_assert(!std::is_same_v<UA, UB>,                                                         \
+                  "Use UTIL_QUANTITIES_UNITSQUARE() for square relation.");                        \
     template <>                                                                                    \
     struct UnitProductResult<UA, UB, +1> {                                                         \
       using type = UP;                                                                             \
@@ -281,6 +286,41 @@ namespace util::quantities::concepts {
     struct UnitProductResult<UP, UB, -1> {                                                         \
       using type = UA;                                                                             \
     };                                                                                             \
+  }
+
+/**
+ * @brief Declares that a unit is the square of another.
+ * @tparam UF type of the unit to be squared
+ * @tparam UP type of the unit of the product `UA * UB`
+ *
+ * It defines `ProductType` template specialization like:
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
+ * template<> struct ProductType<UF, UF> { using type = UP; };
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * that describe the two relations between the two units (`UF * UF = UP`,
+ * and `UP / UF = UF`).
+ *
+ * It requires all the operands to be base unit types (no `ScaledUnit`),
+ * and that the product unit is not the same as the factor one.
+ *
+ * @note For product of different units, use `UTIL_QUANTITIES_UNITPRODUCT()`
+ *       instead.
+ */
+#define UTIL_QUANTITIES_UNITSQUARE(UF, UP)                                                           \
+  namespace util::quantities::concepts::details {                                                    \
+    static_assert(is_base_unit_v<UF>,                                                                \
+                  "The factor type does not meet base unit class requirements.");                    \
+    static_assert(is_base_unit_v<UP>,                                                                \
+                  "The product type does not meet base unit class requirements.");                   \
+    static_assert(!std::is_same_v<UP, UF>, "The factor can't have the same unit as the product."); \
+    template <>                                                                                    \
+    struct UnitProductResult<UF, UF, +1> {                                                         \
+      using type = UP;                                                                             \
+    };                                                                                             \
+    template <>                                                                                    \
+    struct UnitProductResult<UP, UF, -1> {                                                         \
+      using type = UF;                                                                             \
+    };                                                                                               \
   }
 
 // -----------------------------------------------------------------------------
