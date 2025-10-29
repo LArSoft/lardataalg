@@ -13,6 +13,7 @@
 
 // LArSoft libraries
 #include "lardataalg/Utilities/quantities/frequency.h"
+#include "lardataalg/Utilities/quantities/spacetime.h"
 
 // C/C++ standard libraries
 #include <type_traits> // std::decay_t<>
