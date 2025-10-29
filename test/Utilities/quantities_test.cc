@@ -34,6 +34,21 @@ namespace util::quantities {
       static constexpr auto name = "second"sv;
     };
 
+    struct TestHertz : public concepts::UnitBase {
+      static constexpr auto symbol = "Hz"sv;
+      static constexpr auto name = "hertz"sv;
+    };
+
+    struct TestOhm : public concepts::UnitBase {
+      static constexpr auto symbol = "Ω"sv;
+      static constexpr auto name = "ohm"sv;
+    };
+
+    struct TestFarad : public concepts::UnitBase {
+      static constexpr auto symbol = "F"sv;
+      static constexpr auto name = "farad"sv;
+    };
+
   }
 
   // The most generic `units::TestSecond`-based quantity.
@@ -66,6 +81,63 @@ namespace util::quantities {
 
   /// Type of time stored in nanosecond, in double precision.
   using nanosecond = nanosecond_as<>;
+
+  // hertz
+  // The most generic `units::TestHertz`-based quantity.
+  template <typename R, typename T = double>
+  using scaled_hertz = concepts::scaled_quantity<units::TestHertz, R, T>;
+
+  /// Type of frequency stored in hertz.
+  template <typename T = double>
+  using hertz_as = scaled_hertz<std::ratio<1>, T>;
+
+  /// Type of frequency stored in hertz, in double precision.
+  using hertz = hertz_as<>;
+
+  /// Type of frequency stored in kilohertz.
+  template <typename T = double>
+  using kilohertz_as = concepts::rescale<hertz_as<T>, std::kilo>;
+
+  /// Type of frequency stored in kilohertz, in double precision.
+  using kilohertz = kilohertz_as<>;
+
+  // ohm
+  // The most generic `units::TestOhm`-based quantity.
+  template <typename R, typename T = double>
+  using scaled_ohm = concepts::scaled_quantity<units::TestOhm, R, T>;
+
+  /// Type of frequency stored in ohm.
+  template <typename T = double>
+  using ohm_as = scaled_ohm<std::ratio<1>, T>;
+
+  /// Type of frequency stored in ohm, in double precision.
+  using ohm = ohm_as<>;
+
+  /// Type of frequency stored in kiloohm.
+  template <typename T = double>
+  using kiloohm_as = concepts::rescale<ohm_as<T>, std::kilo>;
+
+  /// Type of frequency stored in kiloohm, in double precision.
+  using kiloohm = kiloohm_as<>;
+
+  // farad
+  // The most generic `units::TestFarad`-based quantity.
+  template <typename R, typename T = double>
+  using scaled_farad = concepts::scaled_quantity<units::TestFarad, R, T>;
+
+  /// Type of frequency stored in farad.
+  template <typename T = double>
+  using farad_as = scaled_farad<std::ratio<1>, T>;
+
+  /// Type of frequency stored in farad, in double precision.
+  using farad = farad_as<>;
+
+  /// Type of frequency stored in nanofarad.
+  template <typename T = double>
+  using nanofarad_as = concepts::rescale<farad_as<T>, std::nano>;
+
+  /// Type of frequency stored in nanofarad, in double precision.
+  using nanofarad = nanofarad_as<>;
 
   namespace unit_literals {
 
@@ -109,9 +181,52 @@ namespace util::quantities {
       return nanosecond{static_cast<double>(v)};
     }
 
+    // Literal hertz value.
+    constexpr hertz operator""_Hz(long double v)
+    {
+      return hertz{static_cast<double>(v)};
+    }
+    constexpr hertz operator""_Hz(unsigned long long int v)
+    {
+      return hertz{static_cast<double>(v)};
+    }
+
+    // Literal kilohertz value.
+    constexpr kilohertz operator""_kHz(long double v)
+    {
+      return kilohertz{static_cast<double>(v)};
+    }
+    constexpr kilohertz operator""_kHz(unsigned long long int v)
+    {
+      return kilohertz{static_cast<double>(v)};
+    }
+
+    // Literal kiloohm value.
+    constexpr kiloohm operator""_kohm(long double v)
+    {
+      return kiloohm{static_cast<double>(v)};
+    }
+    constexpr kiloohm operator""_kohm(unsigned long long int v)
+    {
+      return kiloohm{static_cast<double>(v)};
+    }
+
+    // Literal nanofarad value.
+    constexpr nanofarad operator""_nF(long double v)
+    {
+      return nanofarad{static_cast<double>(v)};
+    }
+    constexpr nanofarad operator""_nF(unsigned long long int v)
+    {
+      return nanofarad{static_cast<double>(v)};
+    }
+
   } // unit_literals
 
 } // util::quantities::units
+
+UTIL_QUANTITIES_UNITPRODUCT(units::TestHertz, units::TestSecond, units::Unity);
+UTIL_QUANTITIES_UNITPRODUCT(units::TestOhm, units::TestFarad, units::TestSecond);
 
 // Because util::quantites::seconds (etc.) has std::numeric_limits<>
 // specializations, the Boost unit test suite assumes they are
@@ -135,46 +250,67 @@ namespace boost::math::fpc {
 template <typename>
 struct EmptyClass {};
 
-static_assert(!util::quantities::concepts::details::has_unit_v<double>);
-static_assert(!util::quantities::concepts::details::has_unit_v<EmptyClass<int>>);
-static_assert(util::quantities::concepts::details::has_unit_v<
-              util::quantities::concepts::ScaledUnit<util::quantities::units::TestSecond>>);
-static_assert(util::quantities::concepts::details::has_unit_v<util::quantities::second>);
-static_assert(util::quantities::concepts::details::has_unit_v<util::quantities::microsecond>);
-static_assert(
-  util::quantities::concepts::details::has_unit_v<util::quantities::microsecond_as<float>>);
+namespace util::quantities::concepts::details {
 
-static_assert(!util::quantities::concepts::is_quantity_v<double>);
-static_assert(!util::quantities::concepts::is_quantity_v<EmptyClass<int>>);
-static_assert(!util::quantities::concepts::is_quantity_v<
-              util::quantities::concepts::ScaledUnit<util::quantities::units::TestSecond>>);
-static_assert(util::quantities::concepts::is_quantity_v<util::quantities::second>);
-static_assert(util::quantities::concepts::is_quantity_v<util::quantities::microsecond>);
-static_assert(
-  util::quantities::concepts::is_quantity_v<util::quantities::microsecond_as<float>>);
+  static_assert(!has_unit_v<double>);
+  static_assert(!has_unit_v<EmptyClass<int>>);
+  static_assert(has_unit_v<ScaledUnit<units::TestSecond>>);
+  static_assert(has_unit_v<second>);
+  static_assert(has_unit_v<microsecond>);
+  static_assert(has_unit_v<microsecond_as<float>>);
 
-static_assert(!util::quantities::concepts::details::has_quantity_v<double>);
-static_assert(!util::quantities::concepts::details::has_quantity_v<EmptyClass<int>>);
-static_assert(!util::quantities::concepts::details::has_quantity_v<
-              util::quantities::concepts::ScaledUnit<util::quantities::units::TestSecond>>);
-static_assert(util::quantities::concepts::details::has_quantity_v<util::quantities::second>);
-static_assert(util::quantities::concepts::details::has_quantity_v<util::quantities::microsecond>);
-static_assert(
-  util::quantities::concepts::details::has_quantity_v<util::quantities::microsecond_as<float>>);
+  static_assert(!is_quantity_v<double>);
+  static_assert(!is_quantity_v<EmptyClass<int>>);
+  static_assert(!is_quantity_v<ScaledUnit<units::TestSecond>>);
+  static_assert(is_quantity_v<second>);
+  static_assert(is_quantity_v<microsecond>);
+  static_assert(is_quantity_v<microsecond_as<float>>);
 
-static_assert(util::quantities::second::isCompatibleValue<double>());
-static_assert(util::quantities::second::isCompatibleValue<float>());
-static_assert(util::quantities::second::isCompatibleValue<int>());
-static_assert(!util::quantities::second::isCompatibleValue<util::quantities::second>());
-static_assert(!util::quantities::second::isCompatibleValue<util::quantities::microsecond>());
-static_assert(!util::quantities::second::isCompatibleValue<EmptyClass<int>>());
+  static_assert(!has_quantity_v<double>);
+  static_assert(!has_quantity_v<EmptyClass<int>>);
+  static_assert(!has_quantity_v<ScaledUnit<units::TestSecond>>);
+  static_assert(has_quantity_v<second>);
+  static_assert(has_quantity_v<microsecond>);
+  static_assert(has_quantity_v<microsecond_as<float>>);
 
-static_assert(util::quantities::second::hasCompatibleValue<double>());
-static_assert(util::quantities::second::hasCompatibleValue<float>());
-static_assert(util::quantities::second::hasCompatibleValue<int>());
-static_assert(util::quantities::second::hasCompatibleValue<util::quantities::second>());
-static_assert(util::quantities::second::hasCompatibleValue<util::quantities::microsecond>());
-static_assert(!util::quantities::second::hasCompatibleValue<EmptyClass<int>>());
+  static_assert(second::isCompatibleValue<double>());
+  static_assert(second::isCompatibleValue<float>());
+  static_assert(second::isCompatibleValue<int>());
+  static_assert(!second::isCompatibleValue<second>());
+  static_assert(!second::isCompatibleValue<microsecond>());
+  static_assert(!second::isCompatibleValue<EmptyClass<int>>());
+
+  static_assert(second::hasCompatibleValue<double>());
+  static_assert(second::hasCompatibleValue<float>());
+  static_assert(second::hasCompatibleValue<int>());
+  static_assert(second::hasCompatibleValue<second>());
+  static_assert(second::hasCompatibleValue<microsecond>());
+  static_assert(!second::hasCompatibleValue<EmptyClass<int>>());
+
+  static_assert(microsecond::sameBaseUnitAs<second>());
+  static_assert(!microsecond::sameBaseUnitAs<kilohertz>());
+
+  static_assert(CanCombineQuantities<microsecond, kilohertz, '*'>::value);
+
+  static_assert(std::is_same_v<base_unit_of<microsecond>, units::TestSecond>);
+  static_assert(std::is_same_v<base_unit_of<kilohertz>, units::TestHertz>);
+  static_assert(std::is_same_v<UnitBinaryOpResult<units::TestSecond, units::TestHertz, '*'>::type,
+                               units::Unity>);
+
+  static_assert(std::is_same_v<quantity_binaryop_result_t<microsecond, kilohertz, '*'>, double>);
+  static_assert(IsSpecialQuantityOperation<microsecond, kilohertz, '*'>::value);
+
+  static_assert(
+    std::is_same_v<QuantitiesComboResultOrVoid<microsecond, kilohertz, '*'>::type, double>);
+  static_assert(
+    std::is_same_v<quantities_combo_result_or_void_t<microsecond, kilohertz, '*'>, double>);
+
+  static_assert(all_quantities_or_types_units_v<microsecond, kilohertz>);
+
+  static_assert(
+    std::is_same_v<special_quantities_combo_result_or_void_t<microsecond, kilohertz, '*'>, double>);
+
+} // namespace util::quantities::concepts::details
 
 // -----------------------------------------------------------------------------
 // --- Quantity tests
@@ -304,12 +440,12 @@ void test_quantities_multiply_scalar()
   BOOST_TEST(twice_t / 2.0 == 3.0_s);
 
   static_assert(std::is_same<decltype(twice_t / t), double>(),
-                "Division by a scalar is not the base type!");
-  BOOST_TEST(twice_t / t == 2.0);
+                "Division by same quantity is not the base type!");
+  BOOST_TEST((twice_t / t) == 2.0); // TODO are parentheses still necessary?
 
   static_assert(std::is_same<decltype(t / 300_us), double>(),
-                "Division by a scalar is not the base type!");
-  BOOST_TEST(t / 300_us == 10'000.0);
+                "Division by a same-unit quantity is not the base type!");
+  BOOST_TEST((t / 300_us) == 10'000.0); // TODO are parentheses still necessary?
 
 } // test_quantities_multiply_scalar()
 
@@ -504,6 +640,20 @@ void test_constexpr_operations()
   static_assert(t1 * 2.0 == 20.0_us, "scaling");
   static_assert(2.0 * t1 == 20.0_us, "scaling");
   static_assert(t1 / 2.0 == 5.0_us, "scaling");
+
+  constexpr util::quantities::kilohertz f1{5.0};
+  constexpr double counts = 0.05; // 10 us * 5 kHz
+
+  static_assert(t1 * f1 == counts);
+  static_assert(f1 * t1 == counts);
+  static_assert(std::is_same_v<decltype(counts / f1), util::quantities::millisecond>);
+  static_assert(counts / f1 == t1);
+  static_assert(counts / t1 == f1);
+
+  constexpr util::quantities::kiloohm R1{5.0};
+  constexpr util::quantities::nanofarad C1{2.0};
+
+  static_assert(R1 * C1 == t1);
 
   // ---------------------------------------------------------------------------
 
