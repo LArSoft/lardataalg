@@ -260,6 +260,10 @@ namespace util::quantities {
       template <typename T, typename = void>
       struct base_unit_extactor;
 
+      /// Implementation of `is_quantity_v`.
+      template <typename Q>
+      struct is_quantity;
+
       /// Trait: `true_type` if `U` is a `ScaledUnit`-based object.
       template <typename U>
       struct has_unit;
@@ -267,14 +271,6 @@ namespace util::quantities {
       /// Trait: `true` if `U` is a `ScaledUnit`-based object.
       template <typename U>
       constexpr bool has_unit_v = has_unit<U>();
-
-      /// Trait: `true_type` if `Q` is a `Quantity` specialization.
-      template <typename Q>
-      struct is_quantity;
-
-      /// Trait: `true` if `Q` is a `Quantity` specialization.
-      template <typename Q>
-      constexpr bool is_quantity_v = is_quantity<Q>();
 
       /// Trait: `true_type` if `Q` is a `Quantity`-based object.
       template <typename Q>
@@ -501,6 +497,10 @@ namespace util::quantities {
       return out << unit_t::prefix_t::symbol() << unit_t::baseunit_t::symbol;
     }
 
+    /// Trait: `true` if `Q` is a `Quantity` specialization.
+    template <typename Q>
+    constexpr bool is_quantity_v = details::is_quantity<Q>();
+
     /** ************************************************************************
      * @brief A value measured in the specified unit.
      * @tparam Unit the scaled unit type representing the unit of this quantity
@@ -602,7 +602,7 @@ namespace util::quantities {
        * This assignment prevents narrowing. To force narrowing, convert the
        * operand quantity to a number or "cast" it with `asValueType<>()`.
        */
-      template <typename Q, typename std::enable_if_t<details::is_quantity_v<Q>>* = nullptr>
+      template <typename Q, typename std::enable_if_t<is_quantity_v<Q>>* = nullptr>
       constexpr Quantity(Q q)
         : fValue{unit_t::template fromRepr<typename Q::unit_t::ratio>(q.value())}
       {

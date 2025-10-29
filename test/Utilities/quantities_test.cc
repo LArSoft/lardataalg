@@ -144,14 +144,14 @@ static_assert(util::quantities::concepts::details::has_unit_v<util::quantities::
 static_assert(
   util::quantities::concepts::details::has_unit_v<util::quantities::microsecond_as<float>>);
 
-static_assert(!util::quantities::concepts::details::is_quantity_v<double>);
-static_assert(!util::quantities::concepts::details::is_quantity_v<EmptyClass<int>>);
-static_assert(!util::quantities::concepts::details::is_quantity_v<
+static_assert(!util::quantities::concepts::is_quantity_v<double>);
+static_assert(!util::quantities::concepts::is_quantity_v<EmptyClass<int>>);
+static_assert(!util::quantities::concepts::is_quantity_v<
               util::quantities::concepts::ScaledUnit<util::quantities::units::TestSecond>>);
-static_assert(util::quantities::concepts::details::is_quantity_v<util::quantities::second>);
-static_assert(util::quantities::concepts::details::is_quantity_v<util::quantities::microsecond>);
+static_assert(util::quantities::concepts::is_quantity_v<util::quantities::second>);
+static_assert(util::quantities::concepts::is_quantity_v<util::quantities::microsecond>);
 static_assert(
-  util::quantities::concepts::details::is_quantity_v<util::quantities::microsecond_as<float>>);
+  util::quantities::concepts::is_quantity_v<util::quantities::microsecond_as<float>>);
 
 static_assert(!util::quantities::concepts::details::has_quantity_v<double>);
 static_assert(!util::quantities::concepts::details::has_quantity_v<EmptyClass<int>>);

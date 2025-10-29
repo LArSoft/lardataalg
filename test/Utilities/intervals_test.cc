@@ -63,12 +63,11 @@ static_assert(
 static_assert(util::quantities::concepts::details::has_unit_v<
               util::quantities::intervals::microseconds_as<float>>);
 
+static_assert(!util::quantities::concepts::is_quantity_v<util::quantities::intervals::seconds>);
 static_assert(
-  !util::quantities::concepts::details::is_quantity_v<util::quantities::intervals::seconds>);
+  !util::quantities::concepts::is_quantity_v<util::quantities::intervals::microseconds>);
 static_assert(
-  !util::quantities::concepts::details::is_quantity_v<util::quantities::intervals::microseconds>);
-static_assert(!util::quantities::concepts::details::is_quantity_v<
-              util::quantities::intervals::microseconds_as<float>>);
+  !util::quantities::concepts::is_quantity_v<util::quantities::intervals::microseconds_as<float>>);
 
 static_assert(
   util::quantities::concepts::details::has_quantity_v<util::quantities::intervals::seconds>);
@@ -83,12 +82,10 @@ static_assert(
 static_assert(
   util::quantities::concepts::details::has_unit_v<util::quantities::points::microsecond_as<float>>);
 
+static_assert(!util::quantities::concepts::is_quantity_v<util::quantities::points::second>);
+static_assert(!util::quantities::concepts::is_quantity_v<util::quantities::points::microsecond>);
 static_assert(
-  !util::quantities::concepts::details::is_quantity_v<util::quantities::points::second>);
-static_assert(
-  !util::quantities::concepts::details::is_quantity_v<util::quantities::points::microsecond>);
-static_assert(!util::quantities::concepts::details::is_quantity_v<
-              util::quantities::points::microsecond_as<float>>);
+  !util::quantities::concepts::is_quantity_v<util::quantities::points::microsecond_as<float>>);
 
 static_assert(
   util::quantities::concepts::details::has_quantity_v<util::quantities::points::second>);
