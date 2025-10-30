@@ -678,6 +678,9 @@ void test_makeQuantity()
   q = util::quantities::makeQuantity<millisecond>("  3.0ms  ");
   BOOST_TEST(q.value() == expected.value(), tol);
 
+  q = util::quantities::makeQuantity<millisecond>("  3.0millisecond");
+  BOOST_TEST(q.value() == expected.value(), tol);
+
   q = util::quantities::makeQuantity<millisecond>("3ms");
   BOOST_TEST(q.value() == expected.value(), tol);
 
@@ -693,6 +696,9 @@ void test_makeQuantity()
   q = util::quantities::makeQuantity<millisecond>("+3E-3s");
   BOOST_TEST(q.value() == expected.value(), tol);
 
+  q = util::quantities::makeQuantity<millisecond>("+3E-3second");
+  BOOST_TEST(q.value() == expected.value(), tol);
+
   q = util::quantities::makeQuantity<millisecond>("3", true);
   BOOST_TEST(q.value() == expected.value(), tol);
 
@@ -705,14 +711,28 @@ void test_makeQuantity()
   BOOST_CHECK_THROW(util::quantities::makeQuantity<millisecond>("3"),
                     util::quantities::MissingUnit);
 
-  BOOST_CHECK_THROW(util::quantities::makeQuantity<millisecond>("3 kg"),
-                    util::quantities::MissingUnit);
+  // for the following three errors, InvalidUnitPrefix exception would be more
+  // appropriate but the current implementation does not try to distinguish
+  BOOST_CHECK_THROW(util::quantities::makeQuantity<millisecond>("3 msecond"),
+                    util::quantities::ExtraCharactersError);
+
+  BOOST_CHECK_THROW(util::quantities::makeQuantity<millisecond>("3 millis"),
+                    util::quantities::ExtraCharactersError);
+
+  BOOST_CHECK_THROW(util::quantities::makeQuantity<millisecond>("3 milli second"),
+                    util::quantities::ExtraCharactersError);
 
   BOOST_CHECK_THROW(util::quantities::makeQuantity<millisecond>("3 dumbs"),
                     util::quantities::ExtraCharactersError);
 
+  BOOST_CHECK_THROW(util::quantities::makeQuantity<millisecond>("3 kg"),
+                    util::quantities::MissingUnit);
+
   BOOST_CHECK_THROW(util::quantities::makeQuantity<millisecond>("three ms"),
                     util::quantities::ValueError);
+
+  BOOST_CHECK_THROW(util::quantities::makeQuantity<millisecond>("3.zero ms"),
+                    util::quantities::ExtraCharactersError);
 
   BOOST_CHECK_THROW(util::quantities::makeQuantity<millisecond>("3.zero ms"),
                     util::quantities::ExtraCharactersError);

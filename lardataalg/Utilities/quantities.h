@@ -1513,6 +1513,17 @@ namespace util::quantities::details {
    * @throw ValueError the numerical value in `s` is not parseable
    * @throw ExtraCharactersError spurious characters after the numeric value
    *                             (including an unrecognised unit prefix)
+   *
+   * Supported formats:
+   *  * `<value>[spaces]<unit short>` (e.g. `"5.5 Hz");
+   *  * `<value>[spaces]<unit long>` (e.g. `"5.5hertz");
+   *  * `<value>[spaces]<prefix short><unit short>` (e.g. `"5.5kHz");
+   *  * `<value>[spaces]<prefix long><unit long>` (e.g. `"5.5 kilohertz").
+   *
+   * Spaces are optional.
+   *
+   * If `unitOptional` is `true`, additional format:
+   *  * `<value>` (e.g. `"5.5"`).
    */
   template <typename Quantity>
   std::pair<std::string, typename Quantity::value_t> readUnit(std::string const& str,
@@ -1536,23 +1547,38 @@ std::pair<std::string, typename Quantity::value_t> util::quantities::details::re
 
   using PrefixMap_t = std::map<std::string, value_t>;
   using PrefixValue_t = typename PrefixMap_t::value_type;
-  static PrefixMap_t const factors{PrefixValue_t{"a"s, 1e-18},
-                                   PrefixValue_t{"f"s, 1e-15},
-                                   PrefixValue_t{"p"s, 1e-12},
-                                   PrefixValue_t{"n"s, 1e-09},
-                                   PrefixValue_t{"u"s, 1e-06},
-                                   PrefixValue_t{"m"s, 1e-03},
-                                   PrefixValue_t{"c"s, 1e-02},
-                                   PrefixValue_t{"d"s, 1e-01},
-                                   PrefixValue_t{""s, 1e+00},
-                                   PrefixValue_t{"da"s, 1e+01},
-                                   PrefixValue_t{"h"s, 1e+02},
-                                   PrefixValue_t{"k"s, 1e+03},
-                                   PrefixValue_t{"M"s, 1e+06},
-                                   PrefixValue_t{"G"s, 1e+09},
-                                   PrefixValue_t{"T"s, 1e+12},
-                                   PrefixValue_t{"P"s, 1e+15},
-                                   PrefixValue_t{"E"s, 1e+18}}; // factors
+  static PrefixMap_t const shortFactors{PrefixValue_t{"a"s, 1e-18},
+                                        PrefixValue_t{"f"s, 1e-15},
+                                        PrefixValue_t{"p"s, 1e-12},
+                                        PrefixValue_t{"n"s, 1e-09},
+                                        PrefixValue_t{"u"s, 1e-06},
+                                        PrefixValue_t{"m"s, 1e-03},
+                                        PrefixValue_t{"c"s, 1e-02},
+                                        PrefixValue_t{"d"s, 1e-01},
+                                        PrefixValue_t{"da"s, 1e+01},
+                                        PrefixValue_t{"h"s, 1e+02},
+                                        PrefixValue_t{"k"s, 1e+03},
+                                        PrefixValue_t{"M"s, 1e+06},
+                                        PrefixValue_t{"G"s, 1e+09},
+                                        PrefixValue_t{"T"s, 1e+12},
+                                        PrefixValue_t{"P"s, 1e+15},
+                                        PrefixValue_t{"E"s, 1e+18}}; // shortFactors
+  static PrefixMap_t const longFactors{PrefixValue_t{"atto"s, 1e-18},
+                                       PrefixValue_t{"femto"s, 1e-15},
+                                       PrefixValue_t{"pico"s, 1e-12},
+                                       PrefixValue_t{"nano"s, 1e-09},
+                                       PrefixValue_t{"micro"s, 1e-06},
+                                       PrefixValue_t{"milli"s, 1e-03},
+                                       PrefixValue_t{"centi"s, 1e-02},
+                                       PrefixValue_t{"deci"s, 1e-01},
+                                       PrefixValue_t{"deca"s, 1e+01},
+                                       PrefixValue_t{"hecto"s, 1e+02},
+                                       PrefixValue_t{"kilo"s, 1e+03},
+                                       PrefixValue_t{"mega"s, 1e+06},
+                                       PrefixValue_t{"giga"s, 1e+09},
+                                       PrefixValue_t{"tera"s, 1e+12},
+                                       PrefixValue_t{"peta"s, 1e+15},
+                                       PrefixValue_t{"exa"s, 1e+18}}; // factors
   static auto const composePrefixPattern = [](auto b, auto e) -> std::string {
     std::string pattern = "(";
     if (b != e) {
@@ -1564,11 +1590,25 @@ std::pair<std::string, typename Quantity::value_t> util::quantities::details::re
     }
     return pattern += ")";
   };
-  static std::string const prefixPattern = composePrefixPattern(factors.begin(), factors.end());
+  static std::string const shortPrefixPattern =
+    composePrefixPattern(shortFactors.begin(), shortFactors.end());
+  static std::string const longPrefixPattern =
+    composePrefixPattern(longFactors.begin(), longFactors.end());
   // --- END -- static initialization ------------------------------------------
 
-  std::regex const unitPattern{"[[:blank:]]*(" + prefixPattern + "?" +
-                               util::to_string(baseunit_t::symbol) + ")[[:blank:]]*$"};
+  std::regex const unitPattern{"[[:blank:]]*(" + shortPrefixPattern + "?(" +
+                               util::to_string(baseunit_t::symbol) + ")|" + longPrefixPattern +
+                               "?(" + util::to_string(baseunit_t::name) + "))[[:blank:]]*$"};
+  /*
+   * [0] full match [1] unit [2] short prefix [3] symbol [4] long prefix [5] name:
+   * " 7 centimeter" => [0] " 7 centimeter" [1] "centimeter" [2] ""  [3] ""  [4] "centi" [5] "meter"
+   * " 7 cm "        => [0] " cm "          [1] "cm"         [2] "c" [3] "m" [4] ""      [5] ""
+   */
+  static constexpr int kMatchUnit = 1;
+  static constexpr int kMatchShortPx = 2;
+  static constexpr int kMatchSymbol = 3;
+  static constexpr int kMatchLongPx = 4;
+  static constexpr int kMatchName = 5;
 
   std::smatch unitMatch;
   if (!std::regex_search(str, unitMatch, unitPattern)) {
@@ -1582,16 +1622,31 @@ std::pair<std::string, typename Quantity::value_t> util::quantities::details::re
   //
   // we do have a unit:
   //
+  std::string unitPrefix;
+  PrefixMap_t const* unitPool = nullptr;
+  if (!unitMatch.str(kMatchSymbol).empty()) { // unit symbol specified
+    assert(unitMatch.str(kMatchName).empty());
+    unitPrefix = unitMatch.str(kMatchShortPx);
+    unitPool = &shortFactors;
+  }
+  else if (!unitMatch.str(kMatchName).empty()) { // unit name specified
+    assert(unitMatch.str(kMatchSymbol).empty());
+    unitPrefix = unitMatch.str(kMatchLongPx);
+    unitPool = &longFactors;
+  }
 
-  // " 7 cm " => [0] full match (" cm ") [1] unit ("cm") [2] unit prefix ("c")
-  auto const iFactor = factors.find(unitMatch.str(2U));
-  if (iFactor == factors.end()) {
-    throw InvalidUnitPrefix("Unit '" + unitMatch.str(1U) + "' has unsupported prefix '" +
-                            unitMatch.str(2U) + "' (parsing '" + str + "')");
+  auto scale = static_cast<value_t>(1);
+  if (unitPool && !unitPrefix.empty()) {
+    auto iFactor = unitPool->find(unitPrefix);
+    if (iFactor == unitPool->end()) {
+      throw InvalidUnitPrefix("Unit '" + unitMatch.str(kMatchUnit) + "' has unsupported prefix '" +
+                              unitPrefix + "' (parsing '" + str + "')");
+    }
+    scale = iFactor->second;
   }
 
   return {str.substr(0U, str.length() - unitMatch.length()),
-          static_cast<value_t>(unit_t::scale(iFactor->second))};
+          static_cast<value_t>(unit_t::scale(scale))};
 
 } // util::quantities::details::readUnit()
 
