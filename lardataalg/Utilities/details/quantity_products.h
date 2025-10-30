@@ -33,19 +33,31 @@
  *
  * The core element is an object that describes the relation between three
  * quantities (A times B equal to P). This is a template specialization of
- * `util::quantities::concepts::details::ProductDataType`, which includes the
+ * `util::quantities::concepts::details::UnitBinaryOpResult`, which includes the
  * type of the product of its arguments:
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
- * template <> struct UnitBinaryOpResult<A, B, +1> {
+ * template <> struct UnitBinaryOpResult<A, B, '*'> {
  *   using type = P;
  * };
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * The `+1` is the exponent of `B`, that means that `A` and `B` are being
- * multiplied (`A * B = P`). For the ratio relationship (`A / B = P`), `-1`
- * needs to be used instead.
+ * The `'*'` is the type of operation (our convention is `'*'` means
+ * multiplication), that is, `A` and `B` are being multiplied (`A * B = P`).
+ * For the ratio relationship (`A / B = P`), `'/'` needs to be used instead.
  * A complete set of relations should be declared: A * B = P, B * A = P,
  * P / A = B and P / B = A. The macro `UTIL_QUANTITIES_UNITPRODUCT()` does that.
  *
+ * A special case is when one of the three units is a pure number. That is
+ * stated by using `units::Unity` as unit. In case of product, only the product
+ * type can be a `Unit`, while in case of ratio only the first one can.
+ * The other cases are already always supported when involve only one unit
+ * (we call them "normal" operations), and are not supported if they involve two
+ * different units.
+ *
+ * About the "special" operations (that is, not the "normal" ones):
+ * only product and ratio are implemented so far.
+ * Collisions with the normal `operator*` and `operator/` are reduced (I hope:
+ * prevented) by namespace plus argument-dependent lookup intertwined sometimes
+ * with intense metaprogramming.
  *
  * Naming conventions
  * -------------------
@@ -473,7 +485,7 @@ namespace util::quantities::concepts {
  * to access `util::quantities::units::Second` it is enough to write
  * `units::Second`);
  *
- * The product unit can be a scalar (`units::Unit`), in which case the factor
+ * The product unit can be a scalar (`units::Unity`), in which case the factor
  * units are defined to be inverse one of the other.
  *
  * @note For product of the same unit, use `UTIL_QUANTITIES_UNITSQUARE()`

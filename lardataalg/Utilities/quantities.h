@@ -382,7 +382,7 @@ namespace util::quantities {
 
     }; // struct Prefix
 
-    /// Trait: `T` implements a `BaseUnit` interface.
+    /// Trait: `T` implements a `UnitBase` interface.
     template <typename T>
     constexpr bool is_base_unit_v = details::is_base_unit<T>::value;
 
@@ -512,49 +512,49 @@ namespace util::quantities {
      *
      * * a `Quantity` type will carry the information of its unit with the type
      * * quantities must be assigned other quantities:
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
-     *     using util::quantities::milliampere;
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
+     *   using util::quantities::milliampere;
      *
-     *     milliampere i;
-     *     i = 2.5; // ERROR! what is 2.5?
-     *     i = milliampere(2.5);
+     *   milliampere i;
+     *   i = 2.5; // ERROR! what is 2.5?
+     *   i = milliampere(2.5);
      *
-     *     milliampere i2 { 2.5 }; // SPECIAL, allowed only in construction
-     *     i2 = i1;
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     *   milliampere i2 { 2.5 }; // SPECIAL, allowed only in construction
+     *   i2 = i1;
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * * can be converted, implicitly or explicitly, to its plain value:
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
-     *     using util::quantities::milliampere;
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
+     *   using util::quantities::milliampere;
      *
-     *     milliampere i { 6.0 };
-     *     double v = i; // implicit conversion
-     *     v = double(i); // explicit conversion
-     *     v = i.value(); // even more explicit conversion
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     *   milliampere i { 6.0 };
+     *   double v = i; // implicit conversion
+     *   v = double(i); // explicit conversion
+     *   v = i.value(); // even more explicit conversion
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * * weakly resists attempts to mess with units
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
-     *     milliampere mi { 4.0 };
-     *     microampere ui { 500.0 };
-     *     mi = ui; // now mi == 0.5
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
+     *   milliampere mi { 4.0 };
+     *   microampere ui { 500.0 };
+     *   mi = ui; // now mi == 0.5
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * * weakly attempts to preserve the unit information
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
-     *     using namespace util::quantities;
-     *     using namespace util::quantities::electronics_literals;
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
+     *   using namespace util::quantities;
+     *   using namespace util::quantities::electronics_literals;
      *
-     *     milliampere mi { 4.0 };
-     *     microampere ui { 500.0 };
+     *   milliampere mi { 4.0 };
+     *   microampere ui { 500.0 };
      *
-     *     mi += ui;  // 4.5 mA
-     *     mi *= ui;  // ERROR! what does this even mean??
-     *     mi += 5.0; // ERROR!
-     *     mi += milliampere(3.0); // 7.5 mA
-     *     mi += 2.0_ma; // 9.5 mA
-     *     mi + ui; // ERROR! (arbitrary whether to represent in mA or uA)
-     *     mi + 5.0; // ERROR! (as above)
-     *     mi / 5.0; // milliampere{1.9}
-     *     mi - 5_mA; // milliampere{4.5}
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     *   mi += ui;  // 4.5 mA
+     *   mi *= ui;  // ERROR! what does this even mean??
+     *   mi += 5.0; // ERROR!
+     *   mi += milliampere(3.0); // 7.5 mA
+     *   mi += 2.0_ma; // 9.5 mA
+     *   mi + ui; // ERROR! (arbitrary whether to represent in mA or uA)
+     *   mi + 5.0; // ERROR! (as above)
+     *   mi / 5.0; // milliampere{1.9}
+     *   mi - 5_mA; // milliampere{4.5}
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      *
      * (`milliampere` and `microampere` are hypotetical instantiations of
      * `Quantity` template class from `util::quantities`, and they also have
@@ -1240,7 +1240,7 @@ namespace util::quantities::concepts::details {
 //--- template implementation
 //------------------------------------------------------------------------------
 /// Implementation of `is_base_unit_v` for actual base unit objects
-/// (e.g. `BaseUnit`): asks the complete `BaseUnit` mandatory interface.
+/// (e.g. `UnitBase`): asks the complete `UnitBase` mandatory interface.
 template <typename U>
 struct util::quantities::concepts::details::is_base_unit<
   U,
@@ -1257,7 +1257,7 @@ struct util::quantities::concepts::details::
 };
 
 /// Implementation of `base_unit_of` supporting a base unit itself
-/// (e.g. `BaseUnit`) by asking the complete `BaseUnit` mandatory interface.
+/// (e.g. `UnitBase`) by asking the complete `UnitBase` mandatory interface.
 template <typename U>
 struct util::quantities::concepts::details::
   base_unit_extactor<U, std::enable_if_t<util::quantities::concepts::is_base_unit_v<U>>> {
