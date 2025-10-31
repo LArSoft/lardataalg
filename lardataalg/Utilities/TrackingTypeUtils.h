@@ -22,15 +22,6 @@ namespace recob::tracking {
       out.push_back(To(i));
     return out;
   }
-  template <typename From>
-  std::vector<TVector3> convertVecPointToTVec3(std::vector<From> const& in)
-  {
-    std::vector<TVector3> out;
-    out.reserve(in.size());
-    for (auto& i : in)
-      out.push_back(TVector3(i.X(), i.Y(), i.Z()));
-    return out;
-  }
   template <typename Point>
   Point_t toPoint(Point const& p)
   {
