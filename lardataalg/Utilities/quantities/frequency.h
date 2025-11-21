@@ -10,12 +10,10 @@
  * quantities are defined based on the following units:
  * * hertz (Hz, kHz, MHz, GHz)
  *
- * Also, special operations with units from`util::quantities::unit::Second` are
- * supported:
- * * _t_ x _f_ = _s_
- * * _s_ / _t_ = _f_
- * * _s_ / _f_ = _t_
- * where _t_ is a time, _f_ a frequency and _s_ a pure number.
+ * @note If the following headers are loaded, relationship between these and
+ *       some of their quantities are registered:
+ *       * `spacetime.h` (e.g. s·Hz = 1).
+ *
  *
  * This is a header-only library.
  *
@@ -26,7 +24,6 @@
 
 // LArSoft libraries
 #include "lardataalg/Utilities/quantities.h"
-#include "lardataalg/Utilities/quantities/spacetime.h" // ...::units::Second
 
 // C/C++ standard libraries
 #include <ratio>
@@ -60,6 +57,8 @@ namespace util::quantities {
    *     representation to use
    * * double precision (e.g. `hertz`), ready for use
    *
+   * @note If `spacetime.h` header is loaded, additional relationships hold:
+   *       * `Second` * `Hertz` = constant (and similar)
    */
   /// @{
 
@@ -178,121 +177,18 @@ namespace util::quantities {
   /// @}
   // -- END Frequency ----------------------------------------------------------
 
-  // -- BEGIN Special operations between Second and Hertz units ----------------
-  /**
-   * @name Special operations between Second and Hertz units.
-   *
-   * The following operations are supported:
-   * * _t_ x _f_ = _s_
-   * * _s_ / _t_ = _f_ // TODO
-   * * _s_ / _f_ = _t_ // TODO
-   * where _t_ is a time, _f_ a frequency and _s_ a pure number.
-   *
-   */
-  /// @{
-
-  namespace concepts {
-    //@{
-    /**
-     * @brief Returns the product (as scalar) of a time and a frequency.
-     * @tparam TR type of time unit scale (e.g. `std::micro`)
-     * @tparam TT type of time value representation
-     * @tparam FR type of frequency unit scale (e.g. `std::mega`)
-     * @tparam FT type of frequency value representation
-     * @param t time quantity, based on `util::quantities::units::Second`
-     * @param f frequency quantity, based on `util::quantities::units::Hertz`
-     * @return the product of the two (using the C++ type of `TT * FT`)
-     *
-     */
-    template <typename TR, typename TT, typename FR, typename FT>
-    constexpr auto operator*(scaled_quantity<util::quantities::units::Second, TR, TT> t,
-                             scaled_quantity<util::quantities::units::Hertz, FR, FT> f)
-      -> decltype(std::declval<TT>() * std::declval<FT>());
-    template <typename FR, typename FT, typename TR, typename TT>
-    constexpr auto operator*(scaled_quantity<util::quantities::units::Hertz, FR, FT> f,
-                             scaled_quantity<util::quantities::units::Second, TR, TT> t)
-    {
-      return t * f;
-    }
-    //@}
-
-    /**
-     * @brief Returns a frequency as the inverse of a time.
-     * @tparam T type of pure number
-     * @tparam TR type of time unit scale (e.g. `std::micro`)
-     * @tparam TT type of time value representation
-     * @param v scalar value to be divided
-     * @param t time quantity, based on `util::quantities::unit::Second`
-     * @return a frequency _f_ so that `f * t` equals `v`
-     *
-     * The scale of the frequency unit is the inverse of the time one (e.g.,
-     * a division by `util::quantities::millisecond` gives
-     * `util::quantities::kilohertz`).
-     */
-    template <typename T, typename TR, typename TT>
-    constexpr auto operator/(T v, scaled_second<TR, TT> t) -> std::enable_if_t<
-      std::is_convertible_v<T, TT>,
-      scaled_hertz<details::invert_t<TR>, decltype(std::declval<T>() / std::declval<TT>())>>;
-
-    /**
-     * @brief Returns a time as the inverse of a frequency.
-     * @tparam T type of pure number
-     * @tparam FR type of frequency unit scale (e.g. `std::mega`)
-     * @tparam FT type of frequency value representation
-     * @param v scalar value to be divided
-     * @param t frequency quantity, based on `util::quantities::unit::Hertz`
-     * @return a time _t_ so that `t * f` equals `v`
-     *
-     * The scale of the time unit is the inverse of the frequency one (e.g.,
-     * a division by `util::quantities::kilohertz` gives
-     * `util::quantities::millisecond`).
-     */
-    template <typename T, typename FR, typename FT>
-    constexpr auto operator/(T v, scaled_hertz<FR, FT> f) -> std::enable_if_t<
-      std::is_convertible_v<T, FT>,
-      scaled_second<details::invert_t<FR>, decltype(std::declval<T>() / std::declval<FT>())>>;
-
-  } // namespace concepts
-
-  /// @}
-  // -- END Special operations between Second and Hertz units ------------------
-
 } // namespace util::quantities
 
-//------------------------------------------------------------------------------
-//--- template implementation
-template <typename TR, typename TT, typename FR, typename FT>
-constexpr auto util::quantities::concepts::operator*(
-  scaled_quantity<util::quantities::units::Second, TR, TT> t,
-  scaled_quantity<util::quantities::units::Hertz, FR, FT> f)
-  -> decltype(std::declval<TT>() * std::declval<FT>())
-{
-  return details::applyRatioToValue<simplified_ratio_multiply<TR, FR>>(t.value() * f.value());
-} // util::quantities::operator*(Second, Hertz)
+// --- BEGIN Special relations -------------------------------------------------
 
-//------------------------------------------------------------------------------
-template <typename T, typename TR, typename TT>
-constexpr auto util::quantities::concepts::operator/(T v, scaled_second<TR, TT> t)
-  -> std::enable_if_t<
-    std::is_convertible_v<T, TT>,
-    scaled_hertz<details::invert_t<TR>, decltype(std::declval<T>() / std::declval<TT>())>>
-{
-  return scaled_hertz<details::invert_t<TR>,
-                      decltype(std::declval<T>() / std::declval<TT>())>::castFrom(v / t.value());
-} // util::quantities::operator/(Second)
+// unit relations (they are defined in `util::quantities::concepts::details`,
+//   so the `util::quantities::units` namespace can be shortened)
 
-//------------------------------------------------------------------------------
-template <typename T, typename FR, typename FT>
-constexpr auto util::quantities::concepts::operator/(T v, scaled_hertz<FR, FT> f)
-  -> std::enable_if_t<
-    std::is_convertible_v<T, FT>,
-    scaled_second<details::invert_t<FR>, decltype(std::declval<T>() / std::declval<FT>())>>
-{
-  return scaled_second<details::invert_t<FR>,
-                       decltype(std::declval<T>() / std::declval<FT>())>::castFrom(v / f.value());
-} // util::quantities::operator/(Hertz)
+#ifdef LARDATAALG_UTILITIES_QUANTITIES_SPACETIME_H
+UTIL_QUANTITIES_UNITPRODUCT(units::Second, units::Hertz, units::Unity);
+#endif
 
-//------------------------------------------------------------------------------
+// --- END Special relations ---------------------------------------------------
 
 //------------------------------------------------------------------------------
 

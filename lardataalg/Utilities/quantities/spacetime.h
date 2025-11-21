@@ -9,6 +9,11 @@
  * defined based on the following units:
  * * seconds (ps, ns, us, ms, s), with intervals in `intervals` namespace
  *
+ * @note If the following headers are loaded, relationship between these and
+ *       some of their quantities are registered:
+ *       * `frequency.h` (e.g. s·Hz = 1).
+ *       * `electromagnetism.h` (e.g. Ω·F = s).
+ *
  * This is a header-only library.
  *
  */
@@ -60,6 +65,11 @@ namespace util::quantities {
    * For this unit in particular, additional options are provided to accommodate
    * the custom of using the unit in plural form: `seconds_as` and `seconds`
    * are exactly equivalent to the singular-named counterparts.
+   *
+   * @note Additional relationships hold if the following headers are included:
+   *       * `frequency.h`: `Second * Hertz` = constant (and derived)
+   *       * `electromagnetism.h`: `Ohm * Farad` = `Second` (and derived)
+   *
    */
   /// @{
 
@@ -849,6 +859,21 @@ namespace util::quantities {
   // -- END Space --------------------------------------------------------------
 
 } // namespace util::quantities
+
+// --- BEGIN Special relations -------------------------------------------------
+
+// unit relations (they are defined in `util::quantities::concepts::details`,
+//   so the `util::quantities::units` namespace can be shortened)
+
+#ifdef LARDATAALG_UTILITIES_QUANTITIES_FREQUENCY_H
+UTIL_QUANTITIES_UNITPRODUCT(units::Second, units::Hertz, units::Unity);
+#endif
+
+#ifdef LARDATAALG_UTILITIES_QUANTITIES_ELECTROMAGNETISM_H
+UTIL_QUANTITIES_UNITPRODUCT(units::Ohm, units::Farad, units::Second);
+#endif
+
+// --- END Special relations ---------------------------------------------------
 
 //------------------------------------------------------------------------------
 
