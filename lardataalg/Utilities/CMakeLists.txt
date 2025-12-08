@@ -8,8 +8,10 @@ cet_make_library(LIBRARY_NAME UtilitiesHeaders INTERFACE
   quantities_fhicl.h
   quantities.h
   StatCollector.h
+  TrackingTypeUtils.h
   LIBRARIES INTERFACE
   larcorealg::headers
+  lardataobj::RecoBase
   fhiclcpp::fhiclcpp
   Boost::boost
 )
