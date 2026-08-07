@@ -247,8 +247,8 @@ fcldir	product_dir	job
 #
 ####################################
 product		version		qual	flags		<table_format=2>
-larcorealg	v10_00_05	-
-lardataobj	v10_05_02	-
+larcorealg	v10_00_06	-
+lardataobj	v10_05_03	-
 cetmodules	v3_27_04	-	only_for_build
 end_product_list
 ####################################
@@ -309,6 +309,8 @@ c14:debug	c14:debug	c14:debug
 c14:prof	c14:prof	c14:prof
 e26:debug	e26:debug	e26:debug
 e26:prof	e26:prof	e26:prof
+e28:debug	e28:debug	e28:debug
+e28:prof	e28:prof	e28:prof
 end_qualifier_list
 ####################################
 
