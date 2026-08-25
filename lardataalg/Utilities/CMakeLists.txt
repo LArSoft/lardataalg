@@ -9,6 +9,7 @@ cet_make_library(LIBRARY_NAME UtilitiesHeaders INTERFACE
   quantities.h
   StatCollector.h
   TrackingTypeUtils.h
+  details/quantity_products.h
   LIBRARIES INTERFACE
   larcorealg::headers
   lardataobj::RecoBase
@@ -16,5 +17,5 @@ cet_make_library(LIBRARY_NAME UtilitiesHeaders INTERFACE
   Boost::boost
 )
 
-install_headers(SUBDIRS quantities)
-install_source(SUBDIRS quantities)
+install_headers(SUBDIRS quantities details)
+install_source(SUBDIRS quantities details)

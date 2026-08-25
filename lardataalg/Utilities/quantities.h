@@ -252,6 +252,18 @@ namespace util::quantities {
       //------------------------------------------------------------------------
       //--- Unit-related
       //------------------------------------------------------------------------
+      /// Implementation of `is_base_unit_v`.
+      template <typename T, typename = void>
+      struct is_base_unit : std::false_type {};
+
+      /// Implementation of `base_unit_of`.
+      template <typename T, typename = void>
+      struct base_unit_extactor;
+
+      /// Implementation of `is_quantity_v`.
+      template <typename Q>
+      struct is_quantity;
+
       /// Trait: `true_type` if `U` is a `ScaledUnit`-based object.
       template <typename U>
       struct has_unit;
@@ -259,14 +271,6 @@ namespace util::quantities {
       /// Trait: `true` if `U` is a `ScaledUnit`-based object.
       template <typename U>
       constexpr bool has_unit_v = has_unit<U>();
-
-      /// Trait: `true_type` if `Q` is a `Quantity` specialization.
-      template <typename Q>
-      struct is_quantity;
-
-      /// Trait: `true` if `Q` is a `Quantity` specialization.
-      template <typename Q>
-      constexpr bool is_quantity_v = is_quantity<Q>();
 
       /// Trait: `true_type` if `Q` is a `Quantity`-based object.
       template <typename Q>
@@ -378,6 +382,19 @@ namespace util::quantities {
 
     }; // struct Prefix
 
+    /// Trait: `T` implements a `UnitBase` interface.
+    template <typename T>
+    constexpr bool is_base_unit_v = details::is_base_unit<T>::value;
+
+    /**
+     * @brief Trait: base unit of the specified object.
+     *
+     * Supports `Quantity`, `Unit`, `Interval` and `Point`.
+     * It also sort-of-supports `UnitBase` and the like.
+     */
+    template <typename T>
+    using base_unit_of = typename details::base_unit_extactor<T>::type;
+
     template <typename U, typename R = std::ratio<1>>
     struct ScaledUnit {
 
@@ -458,7 +475,7 @@ namespace util::quantities {
       template <typename OU>
       static constexpr bool sameBaseUnitAs()
       {
-        return std::is_same<baseunit_t, typename OU::baseunit_t>();
+        return std::is_same<baseunit_t, base_unit_of<OU>>();
       }
 
       /// Returns whether scaled unit `U` has the same base unit as this one.
@@ -480,6 +497,10 @@ namespace util::quantities {
       return out << unit_t::prefix_t::symbol() << unit_t::baseunit_t::symbol;
     }
 
+    /// Trait: `true` if `Q` is a `Quantity` specialization.
+    template <typename Q>
+    constexpr bool is_quantity_v = details::is_quantity<Q>();
+
     /** ************************************************************************
      * @brief A value measured in the specified unit.
      * @tparam Unit the scaled unit type representing the unit of this quantity
@@ -491,49 +512,49 @@ namespace util::quantities {
      *
      * * a `Quantity` type will carry the information of its unit with the type
      * * quantities must be assigned other quantities:
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
-     *     using util::quantities::milliampere;
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
+     *   using util::quantities::milliampere;
      *
-     *     milliampere i;
-     *     i = 2.5; // ERROR! what is 2.5?
-     *     i = milliampere(2.5);
+     *   milliampere i;
+     *   i = 2.5; // ERROR! what is 2.5?
+     *   i = milliampere(2.5);
      *
-     *     milliampere i2 { 2.5 }; // SPECIAL, allowed only in construction
-     *     i2 = i1;
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     *   milliampere i2 { 2.5 }; // SPECIAL, allowed only in construction
+     *   i2 = i1;
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * * can be converted, implicitly or explicitly, to its plain value:
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
-     *     using util::quantities::milliampere;
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
+     *   using util::quantities::milliampere;
      *
-     *     milliampere i { 6.0 };
-     *     double v = i; // implicit conversion
-     *     v = double(i); // explicit conversion
-     *     v = i.value(); // even more explicit conversion
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     *   milliampere i { 6.0 };
+     *   double v = i; // implicit conversion
+     *   v = double(i); // explicit conversion
+     *   v = i.value(); // even more explicit conversion
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * * weakly resists attempts to mess with units
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
-     *     milliampere mi { 4.0 };
-     *     microampere ui { 500.0 };
-     *     mi = ui; // now mi == 0.5
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
+     *   milliampere mi { 4.0 };
+     *   microampere ui { 500.0 };
+     *   mi = ui; // now mi == 0.5
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * * weakly attempts to preserve the unit information
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
-     *     using namespace util::quantities;
-     *     using namespace util::quantities::electronics_literals;
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.cpp}
+     *   using namespace util::quantities;
+     *   using namespace util::quantities::electronics_literals;
      *
-     *     milliampere mi { 4.0 };
-     *     microampere ui { 500.0 };
+     *   milliampere mi { 4.0 };
+     *   microampere ui { 500.0 };
      *
-     *     mi += ui;  // 4.5 mA
-     *     mi *= ui;  // ERROR! what does this even mean??
-     *     mi += 5.0; // ERROR!
-     *     mi += milliampere(3.0); // 7.5 mA
-     *     mi += 2.0_ma; // 9.5 mA
-     *     mi + ui; // ERROR! (arbitrary whether to represent in mA or uA)
-     *     mi + 5.0; // ERROR! (as above)
-     *     mi / 5.0; // milliampere{1.9}
-     *     mi - 5_mA; // milliampere{4.5}
-     *     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     *   mi += ui;  // 4.5 mA
+     *   mi *= ui;  // ERROR! what does this even mean??
+     *   mi += 5.0; // ERROR!
+     *   mi += milliampere(3.0); // 7.5 mA
+     *   mi += 2.0_ma; // 9.5 mA
+     *   mi + ui; // ERROR! (arbitrary whether to represent in mA or uA)
+     *   mi + 5.0; // ERROR! (as above)
+     *   mi / 5.0; // milliampere{1.9}
+     *   mi - 5_mA; // milliampere{4.5}
+     *   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      *
      * (`milliampere` and `microampere` are hypotetical instantiations of
      * `Quantity` template class from `util::quantities`, and they also have
@@ -577,8 +598,11 @@ namespace util::quantities {
        * Quantities are required to be in the same unit (unit scale may differ).
        * The value in `q` is converted from its native scale into the one of
        * this quantity.
+       *
+       * This assignment prevents narrowing. To force narrowing, convert the
+       * operand quantity to a number or "cast" it with `asValueType<>()`.
        */
-      template <typename Q, typename std::enable_if_t<details::is_quantity_v<Q>>* = nullptr>
+      template <typename Q, typename std::enable_if_t<is_quantity_v<Q>>* = nullptr>
       constexpr Quantity(Q q)
         : fValue{unit_t::template fromRepr<typename Q::unit_t::ratio>(q.value())}
       {
@@ -591,6 +615,71 @@ namespace util::quantities {
 
       /// Explicit conversion to the base quantity.
       explicit constexpr operator value_t() const { return value(); }
+
+      // -- BEGIN Access to the scaled unit ------------------------------------
+      /// @name Access to the scaled unit.
+      /// @{
+
+      /// Returns an object with as type the scaled unit (`unit_t`).
+      static constexpr unit_t unit() { return {}; }
+
+      /// Returns an object with as type the base unit (`baseunit_t`).
+      static constexpr baseunit_t baseUnit() { return {}; }
+
+      /// Returns the full name of the unit, in a string-like object.
+      static auto unitName() { return unit_t::name(); }
+
+      /// Returns the symbol of the unit, in a string-like object.
+      static auto unitSymbol() { return unit_t::symbol(); }
+
+      /**
+       * @brief Returns whether this quantity has the same base unit as `OU`.
+       * @param OU any type with `baseunit_t` type
+       *           (including `ScaledUnit`, `Quantity`, `Interval`...)
+       */
+      template <typename OU>
+      static constexpr bool sameBaseUnitAs()
+      {
+        return unit_t::template sameBaseUnitAs<OU>();
+      }
+
+      /**
+       * @brief Returns whether this quantity has same unit and scale as `OU`.
+       * @param OU any type with `unit_t` type
+       *           (including `ScaledUnit`, `Quantity`, `Interval`...)
+       */
+      template <typename OU>
+      static constexpr bool sameUnitAs()
+      {
+        return unit_t::template sameUnitAs<OU>();
+      }
+
+      /// Whether `U` is a value type compatible with `value_t`.
+      template <typename U>
+      static constexpr bool is_compatible_value_v = details::is_value_compatible_with_v<U, value_t>;
+
+      /// Whether `U` has (or is) a value type compatible with `value_t`.
+      template <typename U>
+      static constexpr bool has_compatible_value_v =
+        details::has_value_compatible_with_v<U, value_t>;
+
+      /// Returns whether `U` is a value type compatible with `value_t`.
+      template <typename U>
+      static constexpr bool isCompatibleValue()
+      {
+        return quantity_t::is_compatible_value_v<U>;
+      }
+
+      /// Returns whether `U` has (or is) a value type compatible with
+      /// `value_t`.
+      template <typename U>
+      static constexpr bool hasCompatibleValue()
+      {
+        return quantity_t::has_compatible_value_v<U>;
+      }
+
+      /// @}
+      // -- END Access to the scaled unit --------------------------------------
 
       // -- BEGIN Asymmetric arithmetic operations -----------------------------
       /**
@@ -643,7 +732,8 @@ namespace util::quantities {
 
       /// Division by a quantity, returns a pure number.
       template <typename OU, typename OT>
-      constexpr value_t operator/(Quantity<OU, OT> q) const;
+      constexpr std::enable_if_t<quantity_t::sameBaseUnitAs<OU>(), value_t> operator/(
+        Quantity<OU, OT> q) const;
 
       /// Add the `other` quantity (possibly concerted) to this one.
       template <typename OU, typename OT>
@@ -720,71 +810,6 @@ namespace util::quantities {
       /// @}
       // -- END Asymmetric arithmetic operations -------------------------------
 
-      // -- BEGIN Access to the scaled unit ------------------------------------
-      /// @name Access to the scaled unit.
-      /// @{
-
-      /// Returns an object with as type the scaled unit (`unit_t`).
-      static constexpr unit_t unit() { return {}; }
-
-      /// Returns an object with as type the base unit (`baseunit_t`).
-      static constexpr baseunit_t baseUnit() { return {}; }
-
-      /// Returns the full name of the unit, in a string-like object.
-      static auto unitName() { return unit_t::name(); }
-
-      /// Returns the symbol of the unit, in a string-like object.
-      static auto unitSymbol() { return unit_t::symbol(); }
-
-      /**
-       * @brief Returns whether this quantity has the same base unit as `OU`.
-       * @param OU any type with `baseunit_t` type
-       *           (including `ScaledUnit`, `Quantity`, `Interval`...)
-       */
-      template <typename OU>
-      static constexpr bool sameBaseUnitAs()
-      {
-        return unit_t::template sameBaseUnitAs<OU>();
-      }
-
-      /**
-       * @brief Returns whether this quantity has same unit and scale as `OU`.
-       * @param OU any type with `unit_t` type
-       *           (including `ScaledUnit`, `Quantity`, `Interval`...)
-       */
-      template <typename OU>
-      static constexpr bool sameUnitAs()
-      {
-        return unit_t::template sameUnitAs<OU>();
-      }
-
-      /// Whether `U` is a value type compatible with `value_t`.
-      template <typename U>
-      static constexpr bool is_compatible_value_v = details::is_value_compatible_with_v<U, value_t>;
-
-      /// Whether `U` has (or is) a value type compatible with `value_t`.
-      template <typename U>
-      static constexpr bool has_compatible_value_v =
-        details::has_value_compatible_with_v<U, value_t>;
-
-      /// Returns whether `U` is a value type compatible with `value_t`.
-      template <typename U>
-      static constexpr bool isCompatibleValue()
-      {
-        return quantity_t::is_compatible_value_v<U>;
-      }
-
-      /// Returns whether `U` has (or is) a value type compatible with
-      /// `value_t`.
-      template <typename U>
-      static constexpr bool hasCompatibleValue()
-      {
-        return quantity_t::has_compatible_value_v<U>;
-      }
-
-      /// @}
-      // -- END Access to the scaled unit --------------------------------------
-
       /// Convert this quantity into the specified one.
       template <typename OQ>
       constexpr OQ convertInto() const
@@ -792,8 +817,15 @@ namespace util::quantities {
         return OQ(*this);
       }
 
+      /// Returns a new quantity with same unit and value using value type `OT`.
+      template <typename OT>
+      constexpr Quantity<unit_t, OT> asValueType() const
+      {
+        return Quantity<unit_t, OT>{static_cast<OT>(value())};
+      }
+
       /**
-       * @brief Returns a new quantity initialized with the specified value
+       * @brief Returns a new quantity initialized with the specified value.
        * @tparam U type to initialize the quantity with
        * @param value the value to initialize the quantity with
        * @return a new `Quantity` object initialized with `value`
@@ -875,13 +907,6 @@ namespace util::quantities {
     {
       return q * factor;
     }
-    //@}
-
-    //@{
-    /// Multiplication between quantities is forbidden.
-    template <typename AU, typename AT, typename BU, typename BT>
-    constexpr auto operator*(Quantity<AU, AT>, Quantity<BU, BT>)
-      -> decltype(std::declval<AT>() * std::declval<BT>()) = delete;
     //@}
 
     //@{
@@ -1214,11 +1239,39 @@ namespace util::quantities::concepts::details {
 //------------------------------------------------------------------------------
 //--- template implementation
 //------------------------------------------------------------------------------
+/// Implementation of `is_base_unit_v` for actual base unit objects
+/// (e.g. `UnitBase`): asks the complete `UnitBase` mandatory interface.
+template <typename U>
+struct util::quantities::concepts::details::is_base_unit<
+  U,
+  std::enable_if_t<std::is_same_v<std::decay_t<decltype(U::name)>, std::string_view> &
+                   std::is_same_v<std::decay_t<decltype(U::symbol)>, std::string_view>>>
+  : std::true_type {};
+
+/// Implementation of `base_unit_of` supporting `Quantity`, `Unit`, `Interval`
+/// and `Point` (and any class accidentally declaring a `baseunit_t` type).
+template <typename Q>
+struct util::quantities::concepts::details::
+  base_unit_extactor<Q, std::void_t<typename Q::baseunit_t>> {
+  using type = typename Q::baseunit_t;
+};
+
+/// Implementation of `base_unit_of` supporting a base unit itself
+/// (e.g. `UnitBase`) by asking the complete `UnitBase` mandatory interface.
+template <typename U>
+struct util::quantities::concepts::details::
+  base_unit_extactor<U, std::enable_if_t<util::quantities::concepts::is_base_unit_v<U>>> {
+  using type = U;
+};
+
+//------------------------------------------------------------------------------
 //--- util::quantities::concepts::Prefix
 //------------------------------------------------------------------------------
 template <typename R>
 constexpr auto util::quantities::concepts::Prefix<R>::names(bool Long /* = false */)
 {
+  if constexpr (std::is_same<ratio, std::exa>()) return Long ? "peta"sv : "E"sv;
+  if constexpr (std::is_same<ratio, std::peta>()) return Long ? "peta"sv : "P"sv;
   if constexpr (std::is_same<ratio, std::tera>()) return Long ? "tera"sv : "T"sv;
   if constexpr (std::is_same<ratio, std::giga>()) return Long ? "giga"sv : "G"sv;
   if constexpr (std::is_same<ratio, std::mega>()) return Long ? "mega"sv : "M"sv;
@@ -1231,7 +1284,7 @@ constexpr auto util::quantities::concepts::Prefix<R>::names(bool Long /* = false
   if constexpr (std::is_same<ratio, std::nano>()) return Long ? "nano"sv : "n"sv;
   if constexpr (std::is_same<ratio, std::pico>()) return Long ? "pico"sv : "p"sv;
   if constexpr (std::is_same<ratio, std::femto>()) return Long ? "femto"sv : "f"sv;
-  // TODO complete the long list of prefixes
+  if constexpr (std::is_same<ratio, std::femto>()) return Long ? "atto"sv : "a"sv;
 
   // backup; can't use `to_string()` because of `constexpr` requirement
   return Long ? "???"sv : "?"sv;
@@ -1303,10 +1356,8 @@ constexpr auto util::quantities::concepts::Quantity<U, T>::minus(Quantity<OU, OT
 template <typename U, typename T>
 template <typename OU, typename OT>
 constexpr auto util::quantities::concepts::Quantity<U, T>::operator/(Quantity<OU, OT> const q) const
-  -> value_t
+  -> std::enable_if_t<quantity_t::sameBaseUnitAs<OU>(), value_t>
 {
-  static_assert(sameBaseUnitAs<OU>(), "Can't divide quantities with different base unit");
-
   // if the two quantities have the same *scaled* unit, divide
   if constexpr (sameUnitAs<OU>()) { return value() / q.value(); }
   else {
@@ -1462,6 +1513,17 @@ namespace util::quantities::details {
    * @throw ValueError the numerical value in `s` is not parseable
    * @throw ExtraCharactersError spurious characters after the numeric value
    *                             (including an unrecognised unit prefix)
+   *
+   * Supported formats:
+   *  * `<value>[spaces]<unit short>` (e.g. `"5.5 Hz");
+   *  * `<value>[spaces]<unit long>` (e.g. `"5.5hertz");
+   *  * `<value>[spaces]<prefix short><unit short>` (e.g. `"5.5kHz");
+   *  * `<value>[spaces]<prefix long><unit long>` (e.g. `"5.5 kilohertz").
+   *
+   * Spaces are optional.
+   *
+   * If `unitOptional` is `true`, additional format:
+   *  * `<value>` (e.g. `"5.5"`).
    */
   template <typename Quantity>
   std::pair<std::string, typename Quantity::value_t> readUnit(std::string const& str,
@@ -1485,23 +1547,38 @@ std::pair<std::string, typename Quantity::value_t> util::quantities::details::re
 
   using PrefixMap_t = std::map<std::string, value_t>;
   using PrefixValue_t = typename PrefixMap_t::value_type;
-  static PrefixMap_t const factors{PrefixValue_t{"a"s, 1e-18},
-                                   PrefixValue_t{"f"s, 1e-15},
-                                   PrefixValue_t{"p"s, 1e-12},
-                                   PrefixValue_t{"n"s, 1e-09},
-                                   PrefixValue_t{"u"s, 1e-06},
-                                   PrefixValue_t{"m"s, 1e-03},
-                                   PrefixValue_t{"c"s, 1e-02},
-                                   PrefixValue_t{"d"s, 1e-01},
-                                   PrefixValue_t{""s, 1e+00},
-                                   PrefixValue_t{"da"s, 1e+01},
-                                   PrefixValue_t{"h"s, 1e+02},
-                                   PrefixValue_t{"k"s, 1e+03},
-                                   PrefixValue_t{"M"s, 1e+06},
-                                   PrefixValue_t{"G"s, 1e+09},
-                                   PrefixValue_t{"T"s, 1e+12},
-                                   PrefixValue_t{"P"s, 1e+15},
-                                   PrefixValue_t{"E"s, 1e+18}}; // factors
+  static PrefixMap_t const shortFactors{PrefixValue_t{"a"s, 1e-18},
+                                        PrefixValue_t{"f"s, 1e-15},
+                                        PrefixValue_t{"p"s, 1e-12},
+                                        PrefixValue_t{"n"s, 1e-09},
+                                        PrefixValue_t{"u"s, 1e-06},
+                                        PrefixValue_t{"m"s, 1e-03},
+                                        PrefixValue_t{"c"s, 1e-02},
+                                        PrefixValue_t{"d"s, 1e-01},
+                                        PrefixValue_t{"da"s, 1e+01},
+                                        PrefixValue_t{"h"s, 1e+02},
+                                        PrefixValue_t{"k"s, 1e+03},
+                                        PrefixValue_t{"M"s, 1e+06},
+                                        PrefixValue_t{"G"s, 1e+09},
+                                        PrefixValue_t{"T"s, 1e+12},
+                                        PrefixValue_t{"P"s, 1e+15},
+                                        PrefixValue_t{"E"s, 1e+18}}; // shortFactors
+  static PrefixMap_t const longFactors{PrefixValue_t{"atto"s, 1e-18},
+                                       PrefixValue_t{"femto"s, 1e-15},
+                                       PrefixValue_t{"pico"s, 1e-12},
+                                       PrefixValue_t{"nano"s, 1e-09},
+                                       PrefixValue_t{"micro"s, 1e-06},
+                                       PrefixValue_t{"milli"s, 1e-03},
+                                       PrefixValue_t{"centi"s, 1e-02},
+                                       PrefixValue_t{"deci"s, 1e-01},
+                                       PrefixValue_t{"deca"s, 1e+01},
+                                       PrefixValue_t{"hecto"s, 1e+02},
+                                       PrefixValue_t{"kilo"s, 1e+03},
+                                       PrefixValue_t{"mega"s, 1e+06},
+                                       PrefixValue_t{"giga"s, 1e+09},
+                                       PrefixValue_t{"tera"s, 1e+12},
+                                       PrefixValue_t{"peta"s, 1e+15},
+                                       PrefixValue_t{"exa"s, 1e+18}}; // factors
   static auto const composePrefixPattern = [](auto b, auto e) -> std::string {
     std::string pattern = "(";
     if (b != e) {
@@ -1513,11 +1590,25 @@ std::pair<std::string, typename Quantity::value_t> util::quantities::details::re
     }
     return pattern += ")";
   };
-  static std::string const prefixPattern = composePrefixPattern(factors.begin(), factors.end());
+  static std::string const shortPrefixPattern =
+    composePrefixPattern(shortFactors.begin(), shortFactors.end());
+  static std::string const longPrefixPattern =
+    composePrefixPattern(longFactors.begin(), longFactors.end());
   // --- END -- static initialization ------------------------------------------
 
-  std::regex const unitPattern{"[[:blank:]]*(" + prefixPattern + "?" +
-                               util::to_string(baseunit_t::symbol) + ")[[:blank:]]*$"};
+  std::regex const unitPattern{"[[:blank:]]*(" + shortPrefixPattern + "?(" +
+                               util::to_string(baseunit_t::symbol) + ")|" + longPrefixPattern +
+                               "?(" + util::to_string(baseunit_t::name) + "))[[:blank:]]*$"};
+  /*
+   * [0] full match [1] unit [2] short prefix [3] symbol [4] long prefix [5] name:
+   * " 7 centimeter" => [0] " 7 centimeter" [1] "centimeter" [2] ""  [3] ""  [4] "centi" [5] "meter"
+   * " 7 cm "        => [0] " cm "          [1] "cm"         [2] "c" [3] "m" [4] ""      [5] ""
+   */
+  static constexpr int kMatchUnit = 1;
+  static constexpr int kMatchShortPx = 2;
+  static constexpr int kMatchSymbol = 3;
+  static constexpr int kMatchLongPx = 4;
+  static constexpr int kMatchName = 5;
 
   std::smatch unitMatch;
   if (!std::regex_search(str, unitMatch, unitPattern)) {
@@ -1531,16 +1622,31 @@ std::pair<std::string, typename Quantity::value_t> util::quantities::details::re
   //
   // we do have a unit:
   //
+  std::string unitPrefix;
+  PrefixMap_t const* unitPool = nullptr;
+  if (!unitMatch.str(kMatchSymbol).empty()) { // unit symbol specified
+    assert(unitMatch.str(kMatchName).empty());
+    unitPrefix = unitMatch.str(kMatchShortPx);
+    unitPool = &shortFactors;
+  }
+  else if (!unitMatch.str(kMatchName).empty()) { // unit name specified
+    assert(unitMatch.str(kMatchSymbol).empty());
+    unitPrefix = unitMatch.str(kMatchLongPx);
+    unitPool = &longFactors;
+  }
 
-  // " 7 cm " => [0] full match (" cm ") [1] unit ("cm") [2] unit prefix ("c")
-  auto const iFactor = factors.find(unitMatch.str(2U));
-  if (iFactor == factors.end()) {
-    throw InvalidUnitPrefix("Unit '" + unitMatch.str(1U) + "' has unsupported prefix '" +
-                            unitMatch.str(2U) + "' (parsing '" + str + "')");
+  auto scale = static_cast<value_t>(1);
+  if (unitPool && !unitPrefix.empty()) {
+    auto iFactor = unitPool->find(unitPrefix);
+    if (iFactor == unitPool->end()) {
+      throw InvalidUnitPrefix("Unit '" + unitMatch.str(kMatchUnit) + "' has unsupported prefix '" +
+                              unitPrefix + "' (parsing '" + str + "')");
+    }
+    scale = iFactor->second;
   }
 
   return {str.substr(0U, str.length() - unitMatch.length()),
-          static_cast<value_t>(unit_t::scale(iFactor->second))};
+          static_cast<value_t>(unit_t::scale(scale))};
 
 } // util::quantities::details::readUnit()
 
@@ -1637,6 +1743,11 @@ namespace std {
   // ---------------------------------------------------------------------------
 
 } // namespace std
+
+//------------------------------------------------------------------------------
+//--- products of quantities implementation
+
+#include "details/quantity_products.h"
 
 //------------------------------------------------------------------------------
 

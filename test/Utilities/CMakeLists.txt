@@ -56,6 +56,11 @@ cet_test(energy_test USE_BOOST_UNIT
   lardataalg::UtilitiesHeaders
 )
 
+cet_test(electromagnetism_test USE_BOOST_UNIT
+  LIBRARIES PRIVATE
+  lardataalg::UtilitiesHeaders
+)
+
 cet_test(datasize_test USE_BOOST_UNIT
   LIBRARIES PRIVATE
   lardataalg::UtilitiesHeaders
