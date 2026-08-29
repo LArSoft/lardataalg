@@ -87,7 +87,7 @@
 #>  define_pythonpath
 ####################################
 parent		lardataalg
-defaultqual	e26
+defaultqual	e28
 ####################################
 
 ####################################
@@ -247,8 +247,8 @@ fcldir	product_dir	job
 #
 ####################################
 product		version		qual	flags		<table_format=2>
-larcorealg	v10_00_06	-
-lardataobj	v10_05_03	-
+larcorealg	v11_00_00rc0	-
+lardataobj	v11_00_00rc0	-
 cetmodules	v3_27_04	-	only_for_build
 end_product_list
 ####################################
@@ -305,10 +305,6 @@ end_product_list
 #
 ####################################
 qualifier	larcorealg	lardataobj	notes
-c14:debug	c14:debug	c14:debug
-c14:prof	c14:prof	c14:prof
-e26:debug	e26:debug	e26:debug
-e26:prof	e26:prof	e26:prof
 e28:debug	e28:debug	e28:debug
 e28:prof	e28:prof	e28:prof
 end_qualifier_list
